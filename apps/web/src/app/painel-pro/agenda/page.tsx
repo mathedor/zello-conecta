@@ -5,19 +5,27 @@ import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScheduleEditor } from './schedule-editor';
 import { BlocksManager } from './blocks-manager';
+import { IntegrationsCard } from './integrations-card';
+import { isGoogleConfigured } from '@/lib/google-calendar';
+import { env } from '@/lib/env';
 
 export const metadata = { title: 'Agenda' };
 
-export default async function AgendaPage() {
+interface PageProps {
+  searchParams: Promise<{ google?: string }>;
+}
+
+export default async function AgendaPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) redirect('/entrar');
+  const sp = await searchParams;
 
   const professional = await prisma.professional.findUnique({
     where: { userId: session.user.id },
   });
   if (!professional) redirect('/painel-pro');
 
-  const [slots, blocks] = await Promise.all([
+  const [slots, blocks, googleIntegration] = await Promise.all([
     prisma.schedule.findMany({
       where: { professionalId: professional.id, active: true },
       orderBy: [{ weekday: 'asc' }, { startTime: 'asc' }],
@@ -26,12 +34,15 @@ export default async function AgendaPage() {
       where: { professionalId: professional.id, endsAt: { gte: new Date() } },
       orderBy: { startsAt: 'asc' },
     }),
+    prisma.calendarIntegration.findUnique({
+      where: { userId_provider: { userId: session.user.id, provider: 'GOOGLE' } },
+    }),
   ]);
 
   return (
     <DashboardShell
       title="Agenda"
-      description="Configure seus horários disponíveis e bloqueie momentos pontuais."
+      description="Configure seus horários disponíveis, bloqueie momentos pontuais e sincronize com seu calendário."
     >
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -55,13 +66,12 @@ export default async function AgendaPage() {
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-6">
           <Card>
             <CardContent className="p-6 md:p-8">
               <h2 className="text-lg font-semibold">Bloqueios pontuais</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Compromissos fora da plataforma, viagens ou férias. Os horários ficam indisponíveis
-                para reserva.
+                Compromissos fora da plataforma, viagens ou férias.
               </p>
               <div className="mt-6">
                 <BlocksManager
@@ -71,6 +81,24 @@ export default async function AgendaPage() {
                     endsAt: b.endsAt.toISOString(),
                     reason: b.reason,
                   }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6 md:p-8">
+              <h2 className="text-lg font-semibold">Integrações de calendário</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Receba reservas direto no seu calendário pessoal.
+              </p>
+              <div className="mt-6">
+                <IntegrationsCard
+                  professionalId={professional.id}
+                  appUrl={env.APP_URL}
+                  googleConnected={Boolean(googleIntegration?.active)}
+                  googleConfigured={isGoogleConfigured()}
+                  status={sp.google}
                 />
               </div>
             </CardContent>

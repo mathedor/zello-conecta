@@ -73,6 +73,8 @@ model User {
   activityLogs      ActivityLog[]
   pushTokens        PushToken[]
   calendarIntegrations CalendarIntegration[]
+  conversationsAsClient Conversation[] @relation("ConversationsAsClient")
+  messagesSent      Message[]      @relation("MessagesSent")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -178,6 +180,7 @@ model Professional {
   bookings        Booking[]       @relation("ProfessionalBookings")
   withdrawTickets WithdrawTicket[]
   payoutAccount   PayoutAccount?
+  conversations   Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -359,6 +362,44 @@ enum EscrowStatus {
   REFUNDED
 }
 
+model Conversation {
+  id             String   @id @default(cuid())
+  clientId       String
+  client         User     @relation("ConversationsAsClient", fields: [clientId], references: [id], onDelete: Cascade)
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  bookingId      String?  @unique
+  booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  lastMessageAt        DateTime @default(now())
+  lastMessage          String?  @db.Text
+  unreadByClient       Int      @default(0)
+  unreadByProfessional Int      @default(0)
+
+  messages       Message[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([clientId, professionalId])
+  @@index([clientId, lastMessageAt])
+  @@index([professionalId, lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String   @db.Text
+  readAt         DateTime?
+
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
 model Booking {
   id             String        @id @default(cuid())
   reference      String        @unique @default(cuid())
@@ -399,6 +440,7 @@ model Booking {
   review        Review?
   dispute       Dispute?
   notifications Notification[]
+  conversation  Conversation?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -582,6 +624,8 @@ enum NotificationType {
   DISPUTE_RESOLVED
   KYC_APPROVED
   KYC_REJECTED
+  MESSAGE_RECEIVED
+  CALENDAR_SYNCED
   GENERIC
 }
 

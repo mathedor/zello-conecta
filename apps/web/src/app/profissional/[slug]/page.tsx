@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { StarRating } from '@/components/public/star-rating';
 import { ServiceMiniCard } from '@/components/public/service-mini-card';
+import { ContactProButton } from '@/components/public/contact-pro-button';
 import { WEEKDAYS } from '@/lib/service-schemas';
 
 interface PageProps {
@@ -325,6 +326,12 @@ export default async function ProfissionalPage({ params }: PageProps) {
                 >
                   ↓ Escolha um serviço acima para agendar
                 </Link>
+                <div className="mt-3">
+                  <ContactProButton
+                    professionalId={pro.id}
+                    professionalName={pro.user.name}
+                  />
+                </div>
               </CardContent>
             </Card>
           </aside>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@zello/db';
 import { sendEmail, emailLayout, escapeHtml } from '@/lib/mailer';
 import { notify } from '@/lib/notify';
+import { createGoogleEvent } from '@/lib/google-calendar';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,14 @@ export async function POST(req: Request) {
         bookingId: booking.id,
         title: 'Nova reserva paga',
         body: `${booking.client.name} contratou ${booking.service.title} para ${booking.scheduledAt.toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`,
+      });
+
+      void createGoogleEvent({
+        userId: booking.professional.userId,
+        summary: `Zello — ${booking.service.title}`,
+        description: `Cliente: ${booking.client.name}\nReserva: ${booking.reference}`,
+        start: booking.scheduledAt,
+        end: booking.scheduledEnd,
       });
     });
   }

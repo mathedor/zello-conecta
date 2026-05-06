@@ -4,7 +4,7 @@ import { authConfig } from '@/lib/auth.config';
 
 const { auth: edgeAuth } = NextAuth(authConfig);
 
-const PROTECTED_PREFIXES = ['/painel', '/painel-pro', '/admin', '/checkout', '/agendar'];
+const PROTECTED_PREFIXES = ['/painel', '/painel-pro', '/admin', '/checkout', '/agendar', '/mensagens'];
 const PRO_PREFIXES = ['/painel-pro'];
 const ADMIN_PREFIXES = ['/admin'];
 
@@ -46,5 +46,6 @@ export const config = {
     '/admin/:path*',
     '/checkout/:path*',
     '/agendar/:path*',
+    '/mensagens/:path*',
   ],
 };
