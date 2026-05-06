@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-const navLinks = [
+const SECONDARY_LINKS = [
   { href: '/como-funciona', label: 'Como funciona' },
   { href: '/quem-somos', label: 'Quem somos' },
   { href: '/tutoriais', label: 'Tutoriais' },
@@ -45,26 +45,6 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center justify-between gap-4 md:h-20">
         <Logo size="sm" />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
-          {navLinks.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                  active
-                    ? 'text-foreground bg-secondary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60',
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-
         <div className="flex items-center gap-2">
           <div className="hidden sm:block">
             <UserMenu />
@@ -75,7 +55,7 @@ export function SiteHeader() {
               <Button
                 variant="outline"
                 size="icon"
-                className="lg:hidden"
+                className="sm:hidden"
                 aria-label="Abrir menu"
               >
                 <Menu className="h-5 w-5" />
@@ -84,31 +64,33 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-full max-w-sm pt-12">
               <div className="flex flex-col gap-6">
                 <Logo size="md" />
-                <nav className="flex flex-col gap-1" aria-label="Mobile">
-                  {navLinks.map((link) => (
+                <div className="flex flex-col gap-3">
+                  <SheetClose asChild>
+                    <Button asChild variant="outline" size="lg" className="w-full">
+                      <Link href="/entrar">Entrar</Link>
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button asChild size="lg" className="w-full">
+                      <Link href="/cadastro">Cadastre-se grátis</Link>
+                    </Button>
+                  </SheetClose>
+                </div>
+                <nav
+                  aria-label="Secundário"
+                  className="flex flex-col gap-1 border-t border-border pt-4"
+                >
+                  {SECONDARY_LINKS.map((link) => (
                     <SheetClose asChild key={link.href}>
                       <Link
                         href={link.href}
-                        className={cn(
-                          'flex items-center rounded-xl px-4 py-3.5 text-base font-medium transition-colors',
-                          pathname === link.href
-                            ? 'bg-zello-50 text-zello-700'
-                            : 'hover:bg-secondary',
-                        )}
+                        className="rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       >
                         {link.label}
                       </Link>
                     </SheetClose>
                   ))}
                 </nav>
-                <div className="mt-2 flex flex-col gap-3 border-t border-border pt-6">
-                  <Button asChild variant="outline" size="lg" className="w-full">
-                    <Link href="/entrar">Entrar</Link>
-                  </Button>
-                  <Button asChild size="lg" className="w-full">
-                    <Link href="/cadastro">Cadastre-se grátis</Link>
-                  </Button>
-                </div>
                 <p className="text-center text-xs text-muted-foreground">
                   Em breve nas lojas iOS e Android
                 </p>
