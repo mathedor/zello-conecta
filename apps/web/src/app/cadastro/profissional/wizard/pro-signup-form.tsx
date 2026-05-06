@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { formatCpf } from '@/lib/format';
 
 export function ProSignupForm() {
   const router = useRouter();
@@ -21,8 +23,12 @@ export function ProSignupForm() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SignupProInput>({ resolver: zodResolver(signupProSchema) });
+  const phoneValue = watch('phone') ?? '';
+  const cpfValue = watch('cpf') ?? '';
 
   const onSubmit = async (values: SignupProInput) => {
     setSubmitting(true);
@@ -85,8 +91,12 @@ export function ProSignupForm() {
               id="cpf"
               placeholder="000.000.000-00"
               inputMode="numeric"
+              maxLength={14}
               aria-invalid={!!errors.cpf}
-              {...register('cpf')}
+              value={formatCpf(cpfValue)}
+              onChange={(e) =>
+                setValue('cpf', formatCpf(e.target.value), { shouldValidate: true })
+              }
             />
             {errors.cpf ? <p className="text-xs text-destructive">{errors.cpf.message}</p> : null}
           </div>
@@ -109,13 +119,11 @@ export function ProSignupForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Telefone</Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder="11999999999"
+              value={phoneValue}
+              onChange={(raw) => setValue('phone', raw, { shouldValidate: true })}
               aria-invalid={!!errors.phone}
-              {...register('phone')}
             />
             {errors.phone ? (
               <p className="text-xs text-destructive">{errors.phone.message}</p>

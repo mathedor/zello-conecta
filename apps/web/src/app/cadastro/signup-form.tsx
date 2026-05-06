@@ -11,6 +11,7 @@ import { signupClientSchema, type SignupClientInput } from '@/lib/auth-schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 export function ClientSignupForm() {
   const router = useRouter();
@@ -20,8 +21,11 @@ export function ClientSignupForm() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SignupClientInput>({ resolver: zodResolver(signupClientSchema) });
+  const phoneValue = watch('phone') ?? '';
 
   const onSubmit = async (values: SignupClientInput) => {
     setSubmitting(true);
@@ -89,12 +93,10 @@ export function ClientSignupForm() {
 
       <div className="space-y-2">
         <Label htmlFor="phone">Telefone (opcional)</Label>
-        <Input
+        <PhoneInput
           id="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="11999999999"
-          {...register('phone')}
+          value={phoneValue}
+          onChange={(raw) => setValue('phone', raw)}
         />
       </div>
 
