@@ -72,14 +72,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token.sub) {
-        session.user.id = token.sub;
-      }
-      const t = token as { role?: Role; kycStatus?: string };
-      if (t.role) session.user.role = t.role;
-      if (t.kycStatus) session.user.kycStatus = t.kycStatus;
-      return session;
-    },
   },
 });
