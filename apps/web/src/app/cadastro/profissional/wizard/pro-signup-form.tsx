@@ -192,6 +192,36 @@ export function ProSignupForm() {
           ) : null}
         </div>
 
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="city">Cidade</Label>
+            <Input
+              id="city"
+              placeholder="São Paulo"
+              autoComplete="address-level2"
+              aria-invalid={!!errors.city}
+              {...register('city')}
+            />
+            {errors.city ? (
+              <p className="text-xs text-destructive">{errors.city.message}</p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="state">UF</Label>
+            <Input
+              id="state"
+              placeholder="SP"
+              maxLength={2}
+              autoComplete="address-level1"
+              aria-invalid={!!errors.state}
+              {...register('state')}
+            />
+            {errors.state ? (
+              <p className="text-xs text-destructive">{errors.state.message}</p>
+            ) : null}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="bio">Sobre você (opcional)</Label>
           <Textarea

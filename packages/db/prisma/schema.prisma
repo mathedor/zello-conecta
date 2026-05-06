@@ -151,8 +151,11 @@ model Professional {
   userId      String  @unique
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  slug         String?  @unique
   bio          String?  @db.Text
   headline     String?
+  city         String?
+  state        String?
   hasOwnLocation Boolean @default(false)
   serveOnSite    Boolean @default(true)
   travelFeePerKm Decimal? @db.Decimal(10, 2)

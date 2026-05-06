@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { nanoid } from 'nanoid';
 import { prisma } from '@zello/db';
 import { signupProSchema } from '@/lib/auth-schemas';
+import { slugify } from '@/lib/service-schemas';
 import { sendEmail, welcomeProEmail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, email, password, phone, cpf, headline, bio } = parsed.data;
+  const { name, email, password, phone, cpf, headline, bio, city, state } = parsed.data;
 
   const cpfClean = cpf.replace(/\D/g, '');
 
@@ -40,6 +42,14 @@ export async function POST(req: Request) {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
+  const baseSlug = slugify(name) || nanoid(8);
+  let slug = baseSlug;
+  let attempt = 0;
+  while (await prisma.professional.findUnique({ where: { slug } })) {
+    attempt += 1;
+    slug = `${baseSlug}-${attempt}`;
+  }
+
   const user = await prisma.user.create({
     data: {
       name,
@@ -51,8 +61,11 @@ export async function POST(req: Request) {
       kycStatus: 'PENDING',
       professional: {
         create: {
+          slug,
           headline,
           bio: bio || null,
+          city,
+          state: state.toUpperCase(),
         },
       },
     },

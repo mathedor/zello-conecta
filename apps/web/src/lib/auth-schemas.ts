@@ -27,6 +27,8 @@ export const signupProSchema = z
     cpf: z.string().regex(cpfRegex, 'CPF inválido'),
     headline: z.string().min(3, 'Mínimo 3 caracteres').max(120),
     bio: z.string().max(2000).optional().or(z.literal('')),
+    city: z.string().min(2, 'Informe sua cidade').max(80),
+    state: z.string().length(2, 'Use a sigla, ex: SP'),
     accept: z.literal(true, { message: 'É necessário aceitar os termos' }),
   })
   .refine((d) => d.password === d.confirmPassword, {
