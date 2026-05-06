@@ -20,6 +20,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatBRL } from '@/lib/pricing';
 import { UserActions } from '@/components/admin/user-actions';
+import { ServiceBookingsButton } from '@/components/admin/service-bookings-sheet';
+import {
+  PRICE_MODE_LABELS,
+  LOCATION_MODE_LABELS,
+} from '@/lib/service-schemas';
 
 export const metadata = { title: 'Usuário' };
 
@@ -54,6 +59,8 @@ export default async function AdminUsuarioPage({ params }: PageProps) {
     disputes,
     withdrawTickets,
     activityCount,
+    proServices,
+    proServicesStats,
   ] = await Promise.all([
     prisma.booking.findMany({
       where: { clientId: id },
@@ -89,7 +96,40 @@ export default async function AdminUsuarioPage({ params }: PageProps) {
         })
       : Promise.resolve([]),
     prisma.activityLog.count({ where: { userId: id } }),
+    user.professional
+      ? prisma.service.findMany({
+          where: { professionalId: user.professional.id },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            category: { select: { name: true } },
+            photos: { take: 1, orderBy: { order: 'asc' } },
+            _count: { select: { bookings: true } },
+          },
+        })
+      : Promise.resolve([]),
+    user.professional
+      ? prisma.booking.groupBy({
+          by: ['serviceId'],
+          where: {
+            professionalId: user.professional.id,
+            status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+          },
+          _count: { id: true },
+          _sum: { totalAmount: true, netToProvider: true },
+        })
+      : Promise.resolve([] as { serviceId: string; _count: { id: number }; _sum: { totalAmount: unknown; netToProvider: unknown } }[]),
   ]);
+
+  const statsByService = new Map(
+    proServicesStats.map((s) => [
+      s.serviceId,
+      {
+        qty: s._count.id,
+        gross: Number(s._sum.totalAmount ?? 0),
+        net: Number(s._sum.netToProvider ?? 0),
+      },
+    ]),
+  );
 
   const initials = user.name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
 
@@ -224,6 +264,109 @@ export default async function AdminUsuarioPage({ params }: PageProps) {
                 <div className="text-xs text-muted-foreground">Serviços ativos</div>
                 <div className="mt-1 font-medium">{user.professional._count.services}</div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {user.professional && proServices.length > 0 ? (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <h2 className="mb-4 text-base font-semibold">
+              Serviços cadastrados ({proServices.length})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border bg-secondary/40">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Serviço
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Categoria
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Cobrança
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Preço
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Contratações
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Faturado
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {proServices.map((s) => {
+                    const stats = statsByService.get(s.id) ?? { qty: 0, gross: 0, net: 0 };
+                    return (
+                      <tr key={s.id} className="hover:bg-secondary/30">
+                        <td className="px-3 py-3">
+                          <div className="font-medium">{s.title}</div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {LOCATION_MODE_LABELS[s.locationMode]} · {s.durationMin} min
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-xs">
+                          {s.category?.name ? (
+                            <Badge variant="soft" className="text-[10px]">
+                              {s.category.name}
+                            </Badge>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-xs">{PRICE_MODE_LABELS[s.priceMode]}</td>
+                        <td className="px-3 py-3 text-xs font-semibold">
+                          {formatBRL(Number(s.price))}
+                        </td>
+                        <td className="px-3 py-3 text-xs font-semibold">{stats.qty}</td>
+                        <td className="px-3 py-3 text-xs font-semibold text-zello-600">
+                          {formatBRL(stats.gross)}
+                        </td>
+                        <td className="px-3 py-3 text-xs">
+                          {s.active ? (
+                            <Badge variant="success" className="text-[10px]">
+                              Ativo
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">
+                              Pausado
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          <ServiceBookingsButton serviceId={s.id} serviceTitle={s.title} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot className="border-t-2 border-border bg-secondary/40 font-semibold">
+                  <tr>
+                    <td className="px-3 py-3 text-xs uppercase">Totais</td>
+                    <td colSpan={3} />
+                    <td className="px-3 py-3 text-sm">
+                      {Array.from(statsByService.values()).reduce((s, x) => s + x.qty, 0)}
+                    </td>
+                    <td className="px-3 py-3 text-sm text-zello-600">
+                      {formatBRL(
+                        Array.from(statsByService.values()).reduce((s, x) => s + x.gross, 0),
+                      )}
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </CardContent>
         </Card>
