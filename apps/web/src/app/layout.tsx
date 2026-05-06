@@ -1,5 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const inter = Inter({
@@ -8,35 +11,73 @@ const inter = Inter({
   display: 'swap',
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zello-conecta.vercel.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
-    default: 'Zello Conecta — Marketplace de serviços profissionais',
+    default: 'Zello Conecta — O serviço certo, na hora certa',
     template: '%s | Zello Conecta',
   },
   description:
-    'Encontre profissionais de qualquer setor, agende e pague de forma segura. Zello Conecta conecta você ao serviço certo, na hora certa.',
-  keywords: ['marketplace', 'serviços', 'profissionais', 'agendamento', 'zello'],
+    'Marketplace de serviços profissionais. Encontre profissionais verificados de qualquer setor, agende com poucos cliques e pague com segurança. Pagamento retido até a conclusão do serviço.',
+  keywords: [
+    'marketplace de serviços',
+    'profissionais',
+    'agendamento',
+    'pagamento seguro',
+    'advocacia',
+    'consultoria',
+    'beleza',
+    'reformas',
+    'tecnologia',
+    'zello conecta',
+  ],
   authors: [{ name: 'Zello Conecta' }],
+  creator: 'Zello Conecta',
+  publisher: 'Zello Conecta',
+  applicationName: 'Zello Conecta',
+  formatDetection: { telephone: false },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://zelloconecta.com.br',
+    url: APP_URL,
     siteName: 'Zello Conecta',
-    title: 'Zello Conecta — Marketplace de serviços profissionais',
-    description: 'Encontre profissionais e agende serviços com pagamento seguro.',
+    title: 'Zello Conecta — O serviço certo, na hora certa',
+    description:
+      'Encontre profissionais verificados, agende com poucos cliques e pague com segurança.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Zello Conecta',
     description: 'Marketplace de serviços profissionais',
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large' },
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a1238' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="flex min-h-screen flex-col font-sans antialiased">
+        <SiteHeader />
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
+        <Toaster position="top-center" richColors closeButton />
+      </body>
     </html>
   );
 }
