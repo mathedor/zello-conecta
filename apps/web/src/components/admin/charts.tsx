@@ -1,23 +1,40 @@
 'use client';
 
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const ResponsiveContainer = dynamic(
+  () => import('recharts').then((m) => m.ResponsiveContainer),
+  { ssr: false },
+);
+const AreaChart = dynamic(() => import('recharts').then((m) => m.AreaChart), { ssr: false });
+const Area = dynamic(() => import('recharts').then((m) => m.Area), { ssr: false });
+const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false });
+const CartesianGrid = dynamic(() => import('recharts').then((m) => m.CartesianGrid), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false });
+
+function useMounted() {
+  const [m, setM] = useState(false);
+  useEffect(() => {
+    setM(true);
+  }, []);
+  return m;
+}
 
 export function BookingsAreaChart({
   data,
 }: {
   data: { date: string; count: number; gmv: number }[];
 }) {
+  const mounted = useMounted();
   const formatted = data.map((d) => ({ ...d, label: shortDate(d.date) }));
+
+  if (!mounted) {
+    return <div className="h-[260px] animate-pulse rounded-lg bg-secondary/40" />;
+  }
 
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -28,16 +45,16 @@ export function BookingsAreaChart({
             <stop offset="100%" stopColor="#1d36f5" stopOpacity={0.04} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="label"
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-          axisLine={{ stroke: 'hsl(var(--border))' }}
+          tick={{ fill: '#71717a', fontSize: 11 }}
+          axisLine={{ stroke: '#e5e7eb' }}
           tickLine={false}
           interval="preserveStartEnd"
         />
         <YAxis
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+          tick={{ fill: '#71717a', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           width={40}
@@ -61,18 +78,24 @@ export function CategoriesBarChart({
 }: {
   data: { name: string; bookings: number; gmv: number }[];
 }) {
+  const mounted = useMounted();
+
+  if (!mounted) {
+    return <div className="h-[260px] animate-pulse rounded-lg bg-secondary/40" />;
+  }
+
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="name"
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-          axisLine={{ stroke: 'hsl(var(--border))' }}
+          tick={{ fill: '#71717a', fontSize: 11 }}
+          axisLine={{ stroke: '#e5e7eb' }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+          tick={{ fill: '#71717a', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           width={40}
