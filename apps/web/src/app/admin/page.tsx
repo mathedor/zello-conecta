@@ -13,103 +13,31 @@ import {
 } from 'lucide-react';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
+import { getAdminStats } from '@/lib/admin-stats';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { BookingsAreaChart, CategoriesBarChart } from '@/components/admin/charts';
 import { formatBRL } from '@/lib/pricing';
 
 export const metadata = { title: 'Admin' };
-export const dynamic = 'force-dynamic';
-
-interface DashboardStats {
-  totalUsers: number;
-  totalProfessionals: number;
-  activeProfessionals: number;
-  totalBookings: number;
-  completedBookings: number;
-  grossSales: number;
-  platformFee: number;
-  averageTicket: number;
-  newUsersWeek: number;
-  newBookingsWeek: number;
-  weekSales: number;
-  kycPending: number;
-  withdrawPending: number;
-  disputesOpen: number;
-}
-
-async function loadStats(): Promise<DashboardStats> {
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-  const [
-    totalUsers,
-    totalProfessionals,
-    activeProfessionals,
-    totalBookings,
-    completedAgg,
-    newUsersWeek,
-    newBookingsWeek,
-    weekSalesAgg,
-    kycPending,
-    withdrawPending,
-    disputesOpen,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { role: 'PROFESSIONAL' } }),
-    prisma.professional.count({
-      where: { user: { kycStatus: 'APPROVED', status: 'ACTIVE' } },
-    }),
-    prisma.booking.count(),
-    prisma.booking.aggregate({
-      where: { status: 'COMPLETED' },
-      _sum: { totalAmount: true, platformFee: true },
-      _count: { id: true },
-      _avg: { totalAmount: true },
-    }),
-    prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
-    prisma.booking.count({ where: { createdAt: { gte: weekAgo } } }),
-    prisma.booking.aggregate({
-      where: { status: 'COMPLETED', createdAt: { gte: weekAgo } },
-      _sum: { totalAmount: true },
-    }),
-    prisma.user.count({ where: { kycStatus: 'SUBMITTED' } }),
-    prisma.withdrawTicket.count({ where: { status: 'REQUESTED' } }),
-    prisma.dispute.count({ where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } } }),
-  ]);
-
-  return {
-    totalUsers,
-    totalProfessionals,
-    activeProfessionals,
-    totalBookings,
-    completedBookings: completedAgg._count.id,
-    grossSales: Number(completedAgg._sum.totalAmount ?? 0),
-    platformFee: Number(completedAgg._sum.platformFee ?? 0),
-    averageTicket: Number(completedAgg._avg.totalAmount ?? 0),
-    newUsersWeek,
-    newBookingsWeek,
-    weekSales: Number(weekSalesAgg._sum.totalAmount ?? 0),
-    kycPending,
-    withdrawPending,
-    disputesOpen,
-  };
-}
 
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== 'ADMIN') redirect('/painel');
 
-  const stats = await loadStats();
+  const [stats, kycPending, withdrawPending, disputes] = await Promise.all([
+    getAdminStats(),
+    prisma.user.count({ where: { kycStatus: 'SUBMITTED' } }),
+    prisma.withdrawTicket.count({ where: { status: 'REQUESTED' } }),
+    prisma.dispute.count({ where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } } }),
+  ]);
 
   const operationalCards = [
-    { icon: UsersRound, label: 'Usuários', value: stats.totalUsers, href: '/admin/usuarios' },
-    { icon: FileCheck, label: 'KYC pendente', value: stats.kycPending, href: '/admin/kyc' },
-    {
-      icon: Wallet,
-      label: 'Saques pendentes',
-      value: stats.withdrawPending,
-      href: '/admin/saques',
-    },
-    { icon: ShieldAlert, label: 'Disputas', value: stats.disputesOpen, href: '/admin/disputas' },
+    { icon: UsersRound, label: 'Usuários', value: stats.totals.users, href: '/admin/usuarios' },
+    { icon: FileCheck, label: 'KYC pendente', value: kycPending, href: '/admin/kyc' },
+    { icon: Wallet, label: 'Saques pendentes', value: withdrawPending, href: '/admin/saques' },
+    { icon: ShieldAlert, label: 'Disputas', value: disputes, href: '/admin/disputas' },
   ];
 
   return (
@@ -118,32 +46,61 @@ export default async function AdminPage() {
         <MetricCard
           icon={CircleDollarSign}
           label="GMV total"
-          value={formatBRL(stats.grossSales)}
-          delta={stats.weekSales}
+          value={formatBRL(stats.totals.grossSales)}
+          delta={stats.weekGrowth.grossSales}
           deltaLabel="esta semana"
           isMoney
         />
         <MetricCard
           icon={CheckCircle2}
           label="Reservas concluídas"
-          value={stats.completedBookings.toString()}
-          delta={stats.newBookingsWeek}
+          value={stats.totals.completedBookings.toString()}
+          delta={stats.weekGrowth.newBookings}
           deltaLabel="esta semana"
         />
         <MetricCard
           icon={UsersRound}
           label="Profissionais ativos"
-          value={`${stats.activeProfessionals} / ${stats.totalProfessionals}`}
-          delta={stats.newUsersWeek}
+          value={`${stats.totals.activeProfessionals} / ${stats.totals.professionals}`}
+          delta={stats.weekGrowth.newUsers}
           deltaLabel="novos cadastros"
         />
         <MetricCard
           icon={TrendingUp}
           label="Comissão acumulada"
-          value={formatBRL(stats.platformFee)}
+          value={formatBRL(stats.totals.platformFee)}
           isMoney
-          subtext={`Ticket médio ${formatBRL(stats.averageTicket)}`}
+          subtext={`Ticket médio ${formatBRL(stats.totals.averageTicket)}`}
         />
+      </div>
+
+      <div className="mt-8 grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Reservas — últimos 30 dias</h2>
+                <p className="text-xs text-muted-foreground">Volume diário (todos os status)</p>
+              </div>
+              <Badge variant="soft">Live</Badge>
+            </div>
+            <BookingsAreaChart data={stats.bookingsByDay} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-base font-semibold">Top categorias</h2>
+            <p className="text-xs text-muted-foreground">Concluídas no período</p>
+            <div className="mt-4">
+              {stats.topCategories.length > 0 ? (
+                <CategoriesBarChart data={stats.topCategories} />
+              ) : (
+                <p className="py-12 text-center text-sm text-muted-foreground">Sem dados ainda.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -165,15 +122,35 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      <Card className="mt-8">
-        <CardContent className="p-6">
-          <h2 className="text-base font-semibold">Próximos passos</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use a sidebar à esquerda para gerenciar usuários, KYC, saques, disputas e categorias.
-            Gráficos comparativos voltam em breve.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="mt-8">
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-4 text-base font-semibold">Atividade recente</h2>
+            {stats.recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem atividade recente.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {stats.recentActivity.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{a.title}</p>
+                      <p className="text-xs text-muted-foreground">{a.detail}</p>
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {new Date(a.date).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </DashboardShell>
   );
 }

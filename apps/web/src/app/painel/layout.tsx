@@ -1,15 +1,11 @@
 import { redirect } from 'next/navigation';
-import {
-  Bell,
-  CalendarDays,
-  History,
-  LayoutDashboard,
-  MessageCircle,
-  Search,
-} from 'lucide-react';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
-import { PanelLayout, PanelSidebar, type SidebarSection } from '@/components/layout/panel-sidebar';
+import {
+  PanelLayout,
+  PanelSidebar,
+  type SidebarSection,
+} from '@/components/layout/panel-sidebar';
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -26,9 +22,9 @@ export default async function PainelLayout({ children }: { children: React.React
   const sections: SidebarSection[] = [
     {
       items: [
-        { href: '/painel', label: 'Visão geral', icon: LayoutDashboard, exact: true },
-        { href: '/painel/agendamentos', label: 'Agendamentos', icon: CalendarDays },
-        { href: '/painel/historico', label: 'Histórico', icon: History },
+        { href: '/painel', label: 'Visão geral', iconName: 'LayoutDashboard', exact: true },
+        { href: '/painel/agendamentos', label: 'Agendamentos', iconName: 'CalendarDays' },
+        { href: '/painel/historico', label: 'Histórico', iconName: 'History' },
       ],
     },
     {
@@ -37,22 +33,31 @@ export default async function PainelLayout({ children }: { children: React.React
         {
           href: '/mensagens',
           label: 'Mensagens',
-          icon: MessageCircle,
+          iconName: 'MessageCircle',
           badge: unreadMsgs._sum.unreadByClient ?? 0,
         },
-        { href: '/painel/notificacoes', label: 'Notificações', icon: Bell, badge: unreadNotif },
+        {
+          href: '/painel/notificacoes',
+          label: 'Notificações',
+          iconName: 'Bell',
+          badge: unreadNotif,
+        },
       ],
     },
     {
       title: 'Plataforma',
-      items: [{ href: '/buscar', label: 'Buscar profissionais', icon: Search }],
+      items: [{ href: '/buscar', label: 'Buscar profissionais', iconName: 'Search' }],
     },
   ];
 
   return (
     <PanelLayout
       sidebar={
-        <PanelSidebar title="Cliente" subtitle={session.user.name ?? undefined} sections={sections} />
+        <PanelSidebar
+          title="Cliente"
+          subtitle={session.user.name ?? undefined}
+          sections={sections}
+        />
       }
     >
       {children}

@@ -2,13 +2,71 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type LucideIcon } from 'lucide-react';
+import {
+  Banknote,
+  BarChart3,
+  Bell,
+  Briefcase,
+  CalendarDays,
+  CalendarRange,
+  History,
+  Inbox,
+  LayoutDashboard,
+  LayoutGrid,
+  ListChecks,
+  MessageCircle,
+  Search,
+  Shield,
+  ShieldAlert,
+  UsersRound,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+export type SidebarIconName =
+  | 'Banknote'
+  | 'BarChart3'
+  | 'Bell'
+  | 'Briefcase'
+  | 'CalendarDays'
+  | 'CalendarRange'
+  | 'History'
+  | 'Inbox'
+  | 'LayoutDashboard'
+  | 'LayoutGrid'
+  | 'ListChecks'
+  | 'MessageCircle'
+  | 'Search'
+  | 'Shield'
+  | 'ShieldAlert'
+  | 'UsersRound'
+  | 'Wallet';
+
+const ICONS: Record<SidebarIconName, LucideIcon> = {
+  Banknote,
+  BarChart3,
+  Bell,
+  Briefcase,
+  CalendarDays,
+  CalendarRange,
+  History,
+  Inbox,
+  LayoutDashboard,
+  LayoutGrid,
+  ListChecks,
+  MessageCircle,
+  Search,
+  Shield,
+  ShieldAlert,
+  UsersRound,
+  Wallet,
+};
 
 export interface SidebarItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  iconName: SidebarIconName;
   badge?: number | null;
   exact?: boolean;
 }
@@ -55,7 +113,7 @@ export function PanelSidebar({
               ) : null}
               {section.items.map((item) => {
                 const active = isActive(item);
-                const Icon = item.icon;
+                const Icon = ICONS[item.iconName];
                 return (
                   <Link
                     key={item.href}
@@ -67,12 +125,14 @@ export function PanelSidebar({
                         : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
                     )}
                   >
-                    <Icon
-                      className={cn(
-                        'h-4 w-4 shrink-0',
-                        active ? 'text-zello-600' : 'text-muted-foreground',
-                      )}
-                    />
+                    {Icon ? (
+                      <Icon
+                        className={cn(
+                          'h-4 w-4 shrink-0',
+                          active ? 'text-zello-600' : 'text-muted-foreground',
+                        )}
+                      />
+                    ) : null}
                     <span className="flex-1 truncate">{item.label}</span>
                     {item.badge && item.badge > 0 ? (
                       <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">

@@ -1,18 +1,11 @@
 import { redirect } from 'next/navigation';
-import {
-  Banknote,
-  Bell,
-  CalendarRange,
-  Inbox,
-  LayoutDashboard,
-  ListChecks,
-  MessageCircle,
-  Shield,
-  User,
-} from 'lucide-react';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
-import { PanelLayout, PanelSidebar, type SidebarSection } from '@/components/layout/panel-sidebar';
+import {
+  PanelLayout,
+  PanelSidebar,
+  type SidebarSection,
+} from '@/components/layout/panel-sidebar';
 
 export default async function PainelProLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -44,17 +37,17 @@ export default async function PainelProLayout({ children }: { children: React.Re
   const sections: SidebarSection[] = [
     {
       items: [
-        { href: '/painel-pro', label: 'Visão geral', icon: LayoutDashboard, exact: true },
-        { href: '/painel-pro/pedidos', label: 'Pedidos', icon: Inbox, badge: pendingOrders },
-        { href: '/painel-pro/servicos', label: 'Meus serviços', icon: ListChecks },
-        { href: '/painel-pro/agenda', label: 'Agenda', icon: CalendarRange },
+        { href: '/painel-pro', label: 'Visão geral', iconName: 'LayoutDashboard', exact: true },
+        { href: '/painel-pro/pedidos', label: 'Pedidos', iconName: 'Inbox', badge: pendingOrders },
+        { href: '/painel-pro/servicos', label: 'Meus serviços', iconName: 'ListChecks' },
+        { href: '/painel-pro/agenda', label: 'Agenda', iconName: 'CalendarRange' },
       ],
     },
     {
       title: 'Financeiro',
       items: [
-        { href: '/painel-pro/financeiro', label: 'Saldo e saques', icon: Banknote },
-        { href: '/painel-pro/kyc', label: 'Verificação', icon: Shield },
+        { href: '/painel-pro/financeiro', label: 'Saldo e saques', iconName: 'Banknote' },
+        { href: '/painel-pro/kyc', label: 'Verificação', iconName: 'Shield' },
       ],
     },
     {
@@ -63,10 +56,15 @@ export default async function PainelProLayout({ children }: { children: React.Re
         {
           href: '/mensagens',
           label: 'Mensagens',
-          icon: MessageCircle,
+          iconName: 'MessageCircle',
           badge: unreadMsgs._sum.unreadByProfessional ?? 0,
         },
-        { href: '/painel/notificacoes', label: 'Notificações', icon: Bell, badge: unreadNotif },
+        {
+          href: '/painel/notificacoes',
+          label: 'Notificações',
+          iconName: 'Bell',
+          badge: unreadNotif,
+        },
       ],
     },
   ];
