@@ -14,10 +14,14 @@ import {
   LayoutDashboard,
   LayoutGrid,
   ListChecks,
+  Map,
+  MapPin,
   MessageCircle,
+  PieChart,
   Search,
   Shield,
   ShieldAlert,
+  Tag,
   UsersRound,
   Wallet,
   type LucideIcon,
@@ -36,10 +40,14 @@ export type SidebarIconName =
   | 'LayoutDashboard'
   | 'LayoutGrid'
   | 'ListChecks'
+  | 'Map'
+  | 'MapPin'
   | 'MessageCircle'
+  | 'PieChart'
   | 'Search'
   | 'Shield'
   | 'ShieldAlert'
+  | 'Tag'
   | 'UsersRound'
   | 'Wallet';
 
@@ -55,10 +63,14 @@ const ICONS: Record<SidebarIconName, LucideIcon> = {
   LayoutDashboard,
   LayoutGrid,
   ListChecks,
+  Map,
+  MapPin,
   MessageCircle,
+  PieChart,
   Search,
   Shield,
   ShieldAlert,
+  Tag,
   UsersRound,
   Wallet,
 };

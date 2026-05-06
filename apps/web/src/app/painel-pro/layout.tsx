@@ -60,7 +60,7 @@ export default async function PainelProLayout({ children }: { children: React.Re
           badge: unreadMsgs._sum.unreadByProfessional ?? 0,
         },
         {
-          href: '/painel/notificacoes',
+          href: '/notificacoes',
           label: 'Notificações',
           iconName: 'Bell',
           badge: unreadNotif,

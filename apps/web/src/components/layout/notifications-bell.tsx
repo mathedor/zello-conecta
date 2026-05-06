@@ -158,7 +158,7 @@ export function NotificationsBell({ compact = false }: { compact?: boolean }) {
         <div className="mt-6 border-t border-border pt-4 text-center">
           <SheetClose asChild>
             <Link
-              href="/painel/notificacoes"
+              href="/notificacoes"
               className="text-sm font-medium text-zello-600 hover:underline"
             >
               Ver todas as notificações →

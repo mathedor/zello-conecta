@@ -11,7 +11,7 @@ export const metadata = { title: 'Notificações' };
 
 export default async function NotificacoesPage() {
   const session = await auth();
-  if (!session?.user) redirect('/entrar?next=/painel/notificacoes');
+  if (!session?.user) redirect('/entrar?next=/notificacoes');
 
   const items = await prisma.notification.findMany({
     where: { userId: session.user.id },
@@ -20,6 +20,13 @@ export default async function NotificacoesPage() {
   });
 
   const unreadCount = items.filter((it) => !it.readAt).length;
+
+  const dashboardHref =
+    session.user.role === 'ADMIN'
+      ? '/admin'
+      : session.user.role === 'PROFESSIONAL'
+        ? '/painel-pro'
+        : '/painel/agendamentos';
 
   return (
     <DashboardShell
@@ -45,7 +52,8 @@ export default async function NotificacoesPage() {
                 <div className="flex items-start gap-3">
                   <Bell
                     className={
-                      'mt-0.5 h-4 w-4 shrink-0 ' + (!it.readAt ? 'text-zello-600' : 'text-muted-foreground')
+                      'mt-0.5 h-4 w-4 shrink-0 ' +
+                      (!it.readAt ? 'text-zello-600' : 'text-muted-foreground')
                     }
                   />
                   <div className="min-w-0 flex-1">
@@ -63,7 +71,7 @@ export default async function NotificacoesPage() {
                   </div>
                   {it.bookingId ? (
                     <Link
-                      href={`/painel/agendamentos`}
+                      href={dashboardHref}
                       className="text-xs font-medium text-zello-600 hover:underline"
                     >
                       Ver

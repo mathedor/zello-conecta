@@ -35,12 +35,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ],
     },
     {
+      title: 'Relatórios',
+      items: [
+        { href: '/admin/relatorios', label: 'Visão geral', iconName: 'PieChart', exact: true },
+        { href: '/admin/relatorios/usuarios', label: 'Usuários', iconName: 'UsersRound' },
+        { href: '/admin/relatorios/profissionais', label: 'Profissionais', iconName: 'Briefcase' },
+        { href: '/admin/relatorios/cidades', label: 'Cidades', iconName: 'MapPin' },
+        { href: '/admin/relatorios/estados', label: 'Estados', iconName: 'Map' },
+        { href: '/admin/relatorios/servicos', label: 'Serviços', iconName: 'LayoutGrid' },
+        { href: '/admin/relatorios/categorias', label: 'Categorias', iconName: 'Tag' },
+      ],
+    },
+    {
       title: 'Plataforma',
       items: [
         { href: '/admin/categorias', label: 'Categorias', iconName: 'LayoutGrid' },
         { href: '/mensagens', label: 'Mensagens', iconName: 'MessageCircle' },
         {
-          href: '/painel/notificacoes',
+          href: '/notificacoes',
           label: 'Notificações',
           iconName: 'Bell',
           badge: unreadNotif,
