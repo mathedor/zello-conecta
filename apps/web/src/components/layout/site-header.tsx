@@ -7,6 +7,8 @@ import { LogIn, LogOut, UserPlus } from 'lucide-react';
 import { Logo } from './logo';
 import { LocationPill } from './location-pill';
 import { UserMenu } from './user-menu';
+import { DesktopNavLinks } from './desktop-nav-links';
+import { NotificationsBell } from './notifications-bell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -29,17 +31,27 @@ export function SiteHeader() {
           : 'bg-background',
       )}
     >
-      <div className="container flex h-14 items-center gap-3 sm:h-20 sm:justify-between">
-        <Logo size="sm" showWordmark={false} className="sm:hidden" />
-        <div className="hidden sm:block">
-          <Logo size="sm" />
+      <div className="container flex h-14 items-center gap-3 sm:h-20">
+        <div className="flex items-center gap-3">
+          <Logo size="sm" showWordmark={false} className="sm:hidden" />
+          <div className="hidden sm:block">
+            <Logo size="sm" />
+          </div>
+          <div className="hidden sm:block">
+            <LocationPill />
+          </div>
         </div>
 
         <div className="flex flex-1 items-center justify-center sm:hidden">
           <LocationPill />
         </div>
 
-        <div className="hidden sm:block">
+        <div className="hidden flex-1 justify-center sm:flex">
+          <DesktopNavLinks />
+        </div>
+
+        <div className="hidden items-center gap-2 sm:flex">
+          <NotificationsBell />
           <UserMenu />
         </div>
 
@@ -72,6 +84,7 @@ function MobileAuthButtons() {
         .toUpperCase() ?? 'U';
     return (
       <div className="flex items-center gap-1 sm:hidden">
+        <NotificationsBell compact />
         <Link
           href={
             data.user.role === 'ADMIN'

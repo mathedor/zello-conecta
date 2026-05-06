@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@zello/db';
 import { sendEmail, emailLayout, escapeHtml } from '@/lib/mailer';
+import { notify } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
         data: { status: 'CONFIRMED' },
         include: {
           client: { select: { name: true, email: true } },
-          professional: { include: { user: { select: { name: true, email: true } } } },
+          professional: { select: { id: true, userId: true, user: { select: { name: true, email: true } } } },
           service: { select: { title: true } },
         },
       });
@@ -65,6 +66,21 @@ export async function POST(req: Request) {
         to: booking.professional.user.email,
         subject: `Nova reserva paga — ${booking.service.title}`,
         html: bookingConfirmedPro(booking),
+      });
+
+      void notify({
+        userId: booking.clientId,
+        type: 'BOOKING_CONFIRMED',
+        bookingId: booking.id,
+        title: 'Reserva confirmada',
+        body: `${booking.service.title} com ${booking.professional.user.name} em ${booking.scheduledAt.toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`,
+      });
+      void notify({
+        userId: booking.professional.userId,
+        type: 'PAYMENT_RECEIVED',
+        bookingId: booking.id,
+        title: 'Nova reserva paga',
+        body: `${booking.client.name} contratou ${booking.service.title} para ${booking.scheduledAt.toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`,
       });
     });
   }

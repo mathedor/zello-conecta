@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
 import { sendEmail, kycApprovedEmail } from '@/lib/mailer';
+import { notify } from '@/lib/notify';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -32,13 +33,20 @@ export async function POST(req: Request) {
         },
       },
     },
-    select: { name: true, email: true },
+    select: { id: true, name: true, email: true },
   });
 
   void sendEmail({
     to: user.email,
     subject: 'KYC aprovado — Zello Conecta',
     html: kycApprovedEmail(user.name),
+  });
+
+  void notify({
+    userId: user.id,
+    type: 'KYC_APPROVED',
+    title: 'KYC aprovado!',
+    body: 'Sua documentação foi aprovada. Você já pode aparecer nas buscas e receber clientes.',
   });
 
   return NextResponse.json({ ok: true });

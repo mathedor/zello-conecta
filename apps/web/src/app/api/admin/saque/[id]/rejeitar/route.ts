@@ -3,6 +3,7 @@ import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
 import { adminWithdrawRejectSchema } from '@/lib/finance-schemas';
 import { sendEmail, emailLayout, escapeHtml } from '@/lib/mailer';
+import { notify } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 
@@ -25,7 +26,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const ticket = await prisma.withdrawTicket.findUnique({
     where: { id },
     include: {
-      professional: { include: { user: { select: { name: true, email: true } } } },
+      professional: { include: { user: { select: { id: true, name: true, email: true } } } },
     },
   });
   if (!ticket) return NextResponse.json({ error: 'Ticket não encontrado' }, { status: 404 });
@@ -48,6 +49,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: { balanceAvailable: { increment: ticket.amount } },
     }),
   ]);
+
+  void notify({
+    userId: ticket.professional.user.id,
+    type: 'WITHDRAW_REJECTED',
+    title: 'Saque não foi processado',
+    body: parsed.data.reason,
+  });
 
   void sendEmail({
     to: ticket.professional.user.email,

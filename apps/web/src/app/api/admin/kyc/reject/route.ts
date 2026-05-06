@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
 import { sendEmail, kycRejectedEmail } from '@/lib/mailer';
+import { notify } from '@/lib/notify';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -40,13 +41,20 @@ export async function POST(req: Request) {
         },
       },
     },
-    select: { name: true, email: true },
+    select: { id: true, name: true, email: true },
   });
 
   void sendEmail({
     to: user.email,
     subject: 'Sua documentação precisa de ajustes — Zello Conecta',
     html: kycRejectedEmail(user.name, reason),
+  });
+
+  void notify({
+    userId: user.id,
+    type: 'KYC_REJECTED',
+    title: 'KYC precisa de ajustes',
+    body: reason,
   });
 
   return NextResponse.json({ ok: true });

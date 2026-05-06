@@ -3,6 +3,7 @@ import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
 import { reviewSchema } from '@/lib/finance-schemas';
 import { sendEmail, emailLayout, escapeHtml } from '@/lib/mailer';
+import { notify } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 
@@ -25,7 +26,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     include: {
       review: true,
       service: { select: { title: true } },
-      professional: { include: { user: { select: { email: true, name: true } } } },
+      professional: { include: { user: { select: { id: true, email: true, name: true } } } },
     },
   });
   if (!booking || booking.clientId !== session.user.id) {
@@ -66,6 +67,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         totalReviews: stats._count.id,
       },
     });
+  });
+
+  void notify({
+    userId: booking.professional.user.id,
+    bookingId: booking.id,
+    type: 'REVIEW_RECEIVED',
+    title: `Você recebeu uma avaliação ${rating}★`,
+    body: comment ? comment : `Em ${booking.service.title}`,
   });
 
   void sendEmail({
