@@ -3,11 +3,13 @@ import { redirect } from 'next/navigation';
 import {
   AlertCircle,
   ArrowRight,
+  Banknote,
   CalendarRange,
   CheckCircle2,
   ClipboardList,
   Clock,
   FileCheck,
+  Inbox,
   ListPlus,
   Wallet,
 } from 'lucide-react';
@@ -152,37 +154,46 @@ export default async function PainelProPage() {
         ))}
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <Card>
-          <CardContent className="flex flex-col gap-3 p-6">
-            <ListPlus className="h-7 w-7 text-zello-600" />
-            <h3 className="text-lg font-semibold">Cadastre seus serviços</h3>
-            <p className="text-sm text-muted-foreground">
-              Crie quantos serviços quiser, com fotos, preço por hora ou empreitada e duração.
-            </p>
-            <Button asChild variant="outline" className="mt-2 w-fit">
-              <Link href="/painel-pro/servicos">
-                Gerenciar serviços
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-3 p-6">
-            <CalendarRange className="h-7 w-7 text-zello-600" />
-            <h3 className="text-lg font-semibold">Configure sua agenda</h3>
-            <p className="text-sm text-muted-foreground">
-              Defina os dias e horários disponíveis. Você pode bloquear horários a qualquer momento.
-            </p>
-            <Button asChild variant="outline" className="mt-2 w-fit">
-              <Link href="/painel-pro/agenda">
-                Abrir agenda
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            icon: ListPlus,
+            title: 'Serviços',
+            desc: 'Crie e edite serviços com fotos.',
+            href: '/painel-pro/servicos',
+          },
+          {
+            icon: CalendarRange,
+            title: 'Agenda',
+            desc: 'Horários da semana e bloqueios.',
+            href: '/painel-pro/agenda',
+          },
+          {
+            icon: Inbox,
+            title: 'Pedidos',
+            desc: 'Reservas confirmadas e histórico.',
+            href: '/painel-pro/pedidos',
+          },
+          {
+            icon: Banknote,
+            title: 'Financeiro',
+            desc: 'Saldo, extrato e saques.',
+            href: '/painel-pro/financeiro',
+          },
+        ].map((item) => (
+          <Link
+            key={item.title}
+            href={item.href}
+            className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-zello-200 hover:shadow-md"
+          >
+            <item.icon className="h-7 w-7 text-zello-600" />
+            <h3 className="text-lg font-semibold">{item.title}</h3>
+            <p className="text-sm text-muted-foreground">{item.desc}</p>
+            <div className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-zello-600 group-hover:gap-2 transition-all">
+              Abrir <ArrowRight className="h-4 w-4" />
+            </div>
+          </Link>
+        ))}
       </div>
     </DashboardShell>
   );
