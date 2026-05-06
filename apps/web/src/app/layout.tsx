@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { ChatFab } from '@/components/layout/chat-fab';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
 import './globals.css';
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="flex-1">{children}</div>
           <SiteFooter />
           <BottomNav />
+          <ChatFab />
           <Toaster position="top-center" richColors closeButton />
         </Providers>
       </body>

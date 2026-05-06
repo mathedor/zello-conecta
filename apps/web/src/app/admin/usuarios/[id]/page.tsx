@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatBRL } from '@/lib/pricing';
+import { UserActions } from '@/components/admin/user-actions';
 
 export const metadata = { title: 'Usuário' };
 
@@ -97,10 +98,23 @@ export default async function AdminUsuarioPage({ params }: PageProps) {
       title={user.name}
       description={`${user.role} · cadastrado em ${user.createdAt.toLocaleDateString('pt-BR')}`}
       actions={
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/admin/usuarios">← Voltar</Link>
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <UserActions
+            user={{
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+              role: user.role,
+              status: user.status,
+              kycStatus: user.kycStatus,
+              city: user.professional?.city ?? null,
+              state: user.professional?.state ?? null,
+              headline: user.professional?.headline ?? null,
+              bio: user.professional?.bio ?? null,
+            }}
+            redirectAfterDelete="/admin/usuarios"
+          />
           {user.professional?.slug ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/profissional/${user.professional.slug}`} target="_blank">
