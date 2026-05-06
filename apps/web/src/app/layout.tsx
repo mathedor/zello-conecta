@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { Toaster } from '@/components/ui/sonner';
+import { Providers } from '@/components/providers';
 import './globals.css';
 
 const inter = Inter({
@@ -73,10 +74,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <SiteHeader />
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
-        <Toaster position="top-center" richColors closeButton />
+        <Providers>
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+          <Toaster position="top-center" richColors closeButton />
+        </Providers>
       </body>
     </html>
   );

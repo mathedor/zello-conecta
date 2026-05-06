@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Logo } from './logo';
+import { UserMenu } from './user-menu';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -65,12 +66,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/entrar">Entrar</Link>
-          </Button>
-          <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/cadastro">Começar</Link>
-          </Button>
+          <div className="hidden sm:block">
+            <UserMenu />
+          </div>
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
