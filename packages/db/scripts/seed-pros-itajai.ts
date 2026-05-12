@@ -418,7 +418,25 @@ async function seedPro(p: ProSeed, idx: number, passwordHash: string, catMap: Ma
     },
   });
 
-  // Wipe and recreate services
+  // Wipe and recreate services — precisa limpar bookings que apontam pros
+  // services antigos pra não bater em FK
+  const oldServices = await prisma.service.findMany({
+    where: { professionalId: professional.id },
+    select: { id: true },
+  });
+  const oldServiceIds = oldServices.map((s) => s.id);
+  if (oldServiceIds.length > 0) {
+    const oldBookings = await prisma.booking.findMany({
+      where: { serviceId: { in: oldServiceIds } },
+      select: { id: true },
+    });
+    const oldBookingIds = oldBookings.map((b) => b.id);
+    if (oldBookingIds.length > 0) {
+      await prisma.review.deleteMany({ where: { bookingId: { in: oldBookingIds } } });
+      await prisma.payment.deleteMany({ where: { bookingId: { in: oldBookingIds } } });
+      await prisma.booking.deleteMany({ where: { id: { in: oldBookingIds } } });
+    }
+  }
   await prisma.servicePhoto.deleteMany({ where: { service: { professionalId: professional.id } } });
   await prisma.service.deleteMany({ where: { professionalId: professional.id } });
 
