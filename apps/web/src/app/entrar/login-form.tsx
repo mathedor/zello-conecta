@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get('next') ?? '/painel';
+  const next = params.get('next') ?? '/';
   const [submitting, setSubmitting] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 

@@ -51,7 +51,7 @@ export function ClientSignupForm() {
         router.push('/entrar');
       } else {
         toast.success('Tudo certo!', { description: 'Bem-vindo à Zello Conecta.' });
-        router.push('/painel');
+        router.push('/');
         router.refresh();
       }
     } catch (err) {
