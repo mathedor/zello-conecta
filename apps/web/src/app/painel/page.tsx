@@ -17,7 +17,7 @@ export default async function PainelPage() {
       description="Aqui você acompanha suas contratações, agendamentos e avaliações."
       actions={
         <Button asChild>
-          <Link href="/buscar">
+          <Link href="/">
             <Search className="h-4 w-4" />
             Buscar profissionais
           </Link>
@@ -57,7 +57,7 @@ export default async function PainelPage() {
             seguro com retenção até a conclusão.
           </p>
           <Button asChild size="lg" className="mt-2">
-            <Link href="/buscar">Explorar serviços</Link>
+            <Link href="/">Explorar serviços</Link>
           </Button>
         </CardContent>
       </Card>
