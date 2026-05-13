@@ -158,28 +158,28 @@ export function SearchForm({
     <form
       onSubmit={submit}
       aria-label="Busca de profissionais"
-      className={cn('w-full', isHero ? 'mx-auto max-w-5xl' : '')}
+      className={cn('w-full', isHero ? 'mx-auto max-w-6xl' : '')}
     >
       <div className={wrapperClass}>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-12 md:items-stretch">
+        <div className="grid grid-cols-1 gap-1.5 md:grid-cols-12 md:items-stretch">
           <FormField
             wide
-            cols="md:col-span-4"
-            icon={<Search className="h-4 w-4" />}
-            label="O que você precisa?"
+            cols="md:col-span-2"
+            icon={<Search className="h-3.5 w-3.5" />}
+            label="O que precisa?"
           >
             <input
               type="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Diarista, advogado, personal..."
-              className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/60 md:text-sm"
+              placeholder="Diarista, advogado..."
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/60 md:text-xs"
             />
           </FormField>
 
           <FormField
             cols="md:col-span-2"
-            icon={<MapPin className="h-4 w-4" />}
+            icon={<MapPin className="h-3.5 w-3.5" />}
             label="Cidade"
           >
             <input
@@ -187,13 +187,13 @@ export function SearchForm({
               value={city}
               onChange={(e) => setCity(e.target.value)}
               placeholder="São Paulo"
-              className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/60 md:text-sm"
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/60 md:text-xs"
             />
           </FormField>
 
           <FormField
             cols="md:col-span-1"
-            icon={<span className="text-[10px] font-bold">UF</span>}
+            icon={<span className="text-[9px] font-bold">UF</span>}
             label="UF"
           >
             <input
@@ -202,19 +202,19 @@ export function SearchForm({
               onChange={(e) => setStateValue(e.target.value.toUpperCase().slice(0, 2))}
               placeholder="SP"
               maxLength={2}
-              className="w-full bg-transparent text-base font-medium uppercase text-foreground outline-none placeholder:text-muted-foreground/60 md:text-sm"
+              className="w-full bg-transparent text-sm font-medium uppercase text-foreground outline-none placeholder:text-muted-foreground/60 md:text-xs"
             />
           </FormField>
 
           <FormField
             cols="md:col-span-2"
-            icon={<LayoutGrid className="h-4 w-4" />}
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
             label="Categoria"
           >
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full cursor-pointer bg-transparent text-base font-medium text-foreground outline-none md:text-sm"
+              className="w-full cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none md:text-xs"
             >
               <option value="">Todas</option>
               {categories.map((c) => (
@@ -227,7 +227,7 @@ export function SearchForm({
 
           <FormField
             cols="md:col-span-2"
-            icon={<CalendarDays className="h-4 w-4" />}
+            icon={<CalendarDays className="h-3.5 w-3.5" />}
             label="Data"
           >
             <input
@@ -235,19 +235,19 @@ export function SearchForm({
               value={date}
               min={today}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-transparent text-base font-medium text-foreground outline-none md:text-sm"
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none md:text-xs"
             />
           </FormField>
 
           <FormField
             cols="md:col-span-1"
-            icon={<Clock className="h-4 w-4" />}
+            icon={<Clock className="h-3.5 w-3.5" />}
             label="Hora"
           >
             <select
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full cursor-pointer bg-transparent text-base font-medium text-foreground outline-none md:text-sm"
+              className="w-full cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none md:text-xs"
             >
               <option value="">--:--</option>
               {TIME_OPTIONS.map((t) => (
@@ -257,48 +257,49 @@ export function SearchForm({
               ))}
             </select>
           </FormField>
+
+          <div className="md:col-span-2 md:flex md:items-stretch">
+            <Button
+              type="submit"
+              disabled={pending}
+              className="h-full w-full rounded-2xl md:rounded-full"
+            >
+              {pending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="md:hidden">Buscando...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  Buscar
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-2 flex flex-col gap-2 px-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-1.5 flex items-center justify-center px-1">
           <button
             type="button"
             onClick={() => setAdvancedOpen((v) => !v)}
             className={cn(
-              'inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors',
               isHero
                 ? 'text-zello-800 hover:bg-zello-50'
                 : 'text-foreground hover:bg-muted',
             )}
             aria-expanded={advancedOpen}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <SlidersHorizontal className="h-3 w-3" />
             {advancedOpen ? 'Menos filtros' : 'Mais filtros'}
             <ChevronDown
               className={cn(
-                'h-3.5 w-3.5 transition-transform',
+                'h-3 w-3 transition-transform',
                 advancedOpen ? 'rotate-180' : '',
               )}
             />
           </button>
-
-          <Button
-            type="submit"
-            size="lg"
-            disabled={pending}
-            className="w-full rounded-full sm:w-auto sm:px-7"
-          >
-            {pending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Buscando...
-              </>
-            ) : (
-              <>
-                <Search className="h-4 w-4" />
-                Buscar
-              </>
-            )}
-          </Button>
         </div>
 
         {advancedOpen ? (
@@ -398,16 +399,16 @@ function FormField({
   return (
     <div
       className={cn(
-        'group flex items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-zello-50/70 md:rounded-full md:px-4',
-        wide ? 'md:pl-5' : '',
+        'group flex items-center gap-2 rounded-2xl px-2 py-1.5 transition-colors hover:bg-zello-50/70 md:rounded-full md:px-2.5',
+        wide ? 'md:pl-3' : '',
         cols,
       )}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zello-50 text-zello-600">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zello-50 text-zello-600">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
         {children}
