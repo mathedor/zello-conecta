@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Filter, SearchX } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 import { prisma } from '@zello/db';
 import { searchProfessionals } from '@/lib/search';
 import { ProfessionalCard } from '@/components/public/professional-card';
-import { SearchFilters } from '@/components/public/search-filters';
+import { SearchForm } from '@/components/public/search-form';
+import { QuickFilters } from '@/components/public/quick-filters';
 
 export const metadata: Metadata = {
   title: 'Buscar profissionais',
-  description: 'Encontre profissionais verificados por categoria, cidade, faixa de preço e avaliação.',
+  description: 'Encontre profissionais verificados por categoria, cidade, data, faixa de preço e avaliação.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +40,8 @@ export default async function BuscarPage({ searchParams }: PageProps) {
     category: pickString(sp.category),
     city: pickString(sp.city),
     state: pickString(sp.state),
+    date: pickString(sp.date),
+    time: pickString(sp.time),
     priceMin: pickNumber(sp.priceMin),
     priceMax: pickNumber(sp.priceMax),
     minRating: pickNumber(sp.minRating),
@@ -59,63 +61,58 @@ export default async function BuscarPage({ searchParams }: PageProps) {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <main className="container py-8 md:py-12">
-      <div className="mb-6 flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Buscar profissionais</h1>
-          <p className="mt-1 text-sm text-muted-foreground md:text-base">
-            {total === 0
-              ? 'Nenhum profissional encontrado com esses filtros.'
-              : `${total} profissional${total === 1 ? '' : 'is'} disponível${total === 1 ? '' : 'eis'}.`}
-          </p>
-        </div>
+    <main className="container py-6 md:py-8">
+      <div className="mb-5">
+        <SearchForm
+          variant="inline"
+          categories={categories}
+          defaultValues={{
+            q: params.q,
+            city: params.city,
+            state: params.state,
+            category: params.category,
+            date: params.date,
+            time: params.time,
+            priceMin: params.priceMin ? String(params.priceMin) : undefined,
+            priceMax: params.priceMax ? String(params.priceMax) : undefined,
+            minRating: params.minRating ? String(params.minRating) : undefined,
+            order: params.order,
+          }}
+        />
+      </div>
 
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="lg:hidden">
-              <Filter className="h-4 w-4" />
-              Filtros
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <QuickFilters />
+        <p className="text-sm text-muted-foreground">
+          {total === 0
+            ? 'Nenhum profissional encontrado.'
+            : `${total} profissional${total === 1 ? '' : 'is'} disponível${total === 1 ? '' : 'eis'}.`}
+        </p>
+      </div>
+
+      <section>
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-card p-12 text-center md:p-16">
+            <SearchX className="h-12 w-12 text-muted-foreground" />
+            <h2 className="text-xl font-semibold">Nada por aqui ainda</h2>
+            <p className="max-w-md text-sm text-muted-foreground">
+              Tente outra categoria, ajustar a data ou ampliar a busca. A plataforma está crescendo
+              e novos profissionais entram a cada semana.
+            </p>
+            <Button asChild variant="outline" className="mt-2">
+              <Link href="/buscar">Limpar filtros</Link>
             </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full max-w-sm overflow-y-auto pt-12">
-            <SearchFilters categories={categories} />
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-24 rounded-2xl border border-border bg-card p-5">
-            <SearchFilters categories={categories} />
           </div>
-        </aside>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((p) => (
+              <ProfessionalCard key={p.slug} data={p} />
+            ))}
+          </div>
+        )}
 
-        <section>
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-card p-12 text-center md:p-16">
-              <SearchX className="h-12 w-12 text-muted-foreground" />
-              <h2 className="text-xl font-semibold">Nada por aqui ainda</h2>
-              <p className="max-w-md text-sm text-muted-foreground">
-                Tente outra categoria, ampliar o raio de busca ou remover filtros. A plataforma está
-                crescendo e novos profissionais entram a cada semana.
-              </p>
-              <Button asChild variant="outline" className="mt-2">
-                <Link href="/buscar">Limpar filtros</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {items.map((p) => (
-                <ProfessionalCard key={p.slug} data={p} />
-              ))}
-            </div>
-          )}
-
-          {totalPages > 1 ? (
-            <Pagination current={page} total={totalPages} sp={sp} />
-          ) : null}
-        </section>
-      </div>
+        {totalPages > 1 ? <Pagination current={page} total={totalPages} sp={sp} /> : null}
+      </section>
     </main>
   );
 }
@@ -140,10 +137,7 @@ function Pagination({
   };
 
   return (
-    <nav
-      aria-label="Paginação"
-      className="mt-8 flex items-center justify-center gap-2"
-    >
+    <nav aria-label="Paginação" className="mt-8 flex items-center justify-center gap-2">
       {current > 1 ? (
         <Button asChild variant="outline" size="sm">
           <Link href={`/buscar?${buildQs(current - 1)}`}>Anterior</Link>
