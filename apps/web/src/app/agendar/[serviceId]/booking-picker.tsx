@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, CalendarX, Loader2 } from 'lucide-react';
+import { ArrowRight, CalendarX, Loader2, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,15 +36,39 @@ function dayLabel(iso: string) {
 export function BookingPicker({
   serviceId,
   initialAvailability,
+  isLogged,
+  initialDate,
+  initialTime,
+  initialNotes,
+  autoBook = false,
 }: {
   serviceId: string;
   initialAvailability: AvailabilityDay[];
+  isLogged: boolean;
+  initialDate?: string;
+  initialTime?: string;
+  initialNotes?: string;
+  autoBook?: boolean;
 }) {
   const router = useRouter();
   const firstWithSlots = initialAvailability.find((d) => d.slots.length > 0);
-  const [selectedDate, setSelectedDate] = useState<string | null>(firstWithSlots?.date ?? null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [notes, setNotes] = useState('');
+  const validInitialDate = initialDate
+    ? initialAvailability.find((d) => d.date === initialDate)?.date
+    : undefined;
+  const validInitialTime =
+    validInitialDate && initialTime
+      ? initialAvailability
+          .find((d) => d.date === validInitialDate)
+          ?.slots.includes(initialTime)
+        ? initialTime
+        : undefined
+      : undefined;
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    validInitialDate ?? firstWithSlots?.date ?? null,
+  );
+  const [selectedTime, setSelectedTime] = useState<string | null>(validInitialTime ?? null);
+  const [notes, setNotes] = useState(initialNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
 
   const slotsForSelected = useMemo(() => {
@@ -57,6 +81,18 @@ export function BookingPicker({
       toast.error('Selecione data e horário');
       return;
     }
+
+    if (!isLogged) {
+      const sp = new URLSearchParams();
+      sp.set('date', selectedDate);
+      sp.set('time', selectedTime);
+      if (notes) sp.set('notes', notes);
+      sp.set('autoBook', '1');
+      const next = `/agendar/${serviceId}?${sp.toString()}`;
+      router.push(`/entrar?next=${encodeURIComponent(next)}`);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/agendar', {
@@ -70,6 +106,16 @@ export function BookingPicker({
         }),
       });
       const data = await res.json();
+      if (res.status === 401) {
+        const sp = new URLSearchParams();
+        sp.set('date', selectedDate);
+        sp.set('time', selectedTime);
+        if (notes) sp.set('notes', notes);
+        sp.set('autoBook', '1');
+        const next = `/agendar/${serviceId}?${sp.toString()}`;
+        router.push(`/entrar?next=${encodeURIComponent(next)}`);
+        return;
+      }
       if (!res.ok) throw new Error(data?.error ?? 'Erro ao agendar');
       toast.success('Reserva criada! Próximo passo: pagamento.');
       router.push(`/checkout/${data.bookingId}`);
@@ -81,6 +127,17 @@ export function BookingPicker({
       setSubmitting(false);
     }
   };
+
+  const autoBookFired = useRef(false);
+  useEffect(() => {
+    if (!autoBook) return;
+    if (!isLogged) return;
+    if (autoBookFired.current) return;
+    if (!selectedDate || !selectedTime) return;
+    autoBookFired.current = true;
+    submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoBook, isLogged, selectedDate, selectedTime]);
 
   const hasAnyAvailability = initialAvailability.some((d) => d.slots.length > 0);
 
@@ -192,13 +249,23 @@ export function BookingPicker({
             <Loader2 className="h-4 w-4 animate-spin" />
             Criando reserva...
           </>
-        ) : (
+        ) : isLogged ? (
           <>
             Continuar para pagamento
             <ArrowRight className="h-4 w-4" />
           </>
+        ) : (
+          <>
+            <LogIn className="h-4 w-4" />
+            Entrar para contratar
+          </>
         )}
       </Button>
+      {!isLogged ? (
+        <p className="-mt-2 text-center text-xs text-muted-foreground">
+          Data e horário ficam guardados — você volta direto pra contratação após o login ou cadastro.
+        </p>
+      ) : null}
     </div>
   );
 }

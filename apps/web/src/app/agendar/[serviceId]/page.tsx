@@ -14,7 +14,13 @@ export const metadata = { title: 'Agendar serviço' };
 
 interface PageProps {
   params: Promise<{ serviceId: string }>;
-  searchParams: Promise<{ profissional?: string }>;
+  searchParams: Promise<{
+    profissional?: string;
+    date?: string;
+    time?: string;
+    notes?: string;
+    autoBook?: string;
+  }>;
 }
 
 function formatBRL(v: number) {
@@ -23,12 +29,10 @@ function formatBRL(v: number) {
 
 export default async function AgendarPage({ params, searchParams }: PageProps) {
   const { serviceId } = await params;
-  const { profissional: _profSlug } = await searchParams;
+  const sp = await searchParams;
 
   const session = await auth();
-  if (!session?.user) {
-    redirect(`/entrar?next=${encodeURIComponent(`/agendar/${serviceId}`)}`);
-  }
+  const isLogged = !!session?.user;
 
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
@@ -42,7 +46,7 @@ export default async function AgendarPage({ params, searchParams }: PageProps) {
   });
 
   if (!service || !service.active || !service.professional) notFound();
-  if (service.professional.user.id === session.user.id) {
+  if (isLogged && service.professional.user.id === session.user.id) {
     redirect(`/profissional/${service.professional.slug ?? service.professional.id}`);
   }
 
@@ -112,7 +116,15 @@ export default async function AgendarPage({ params, searchParams }: PageProps) {
                 Próximos 14 dias com horários disponíveis na agenda do profissional.
               </p>
               <div className="mt-6">
-                <BookingPicker serviceId={serviceId} initialAvailability={availability} />
+                <BookingPicker
+                  serviceId={serviceId}
+                  initialAvailability={availability}
+                  isLogged={isLogged}
+                  initialDate={sp.date}
+                  initialTime={sp.time}
+                  initialNotes={sp.notes}
+                  autoBook={sp.autoBook === '1'}
+                />
               </div>
             </CardContent>
           </Card>

@@ -9,7 +9,13 @@ export const metadata: Metadata = {
   description: 'Acesse sua conta na Zello Conecta.',
 };
 
-export default function EntrarPage() {
+export default async function EntrarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const cadastroHref = next ? `/cadastro?next=${encodeURIComponent(next)}` : '/cadastro';
   return (
     <AuthShell
       title="Entrar"
@@ -17,7 +23,7 @@ export default function EntrarPage() {
       footer={
         <>
           Ainda não tem conta?{' '}
-          <Link href="/cadastro" className="font-medium text-zello-600 hover:underline">
+          <Link href={cadastroHref} className="font-medium text-zello-600 hover:underline">
             Cadastre-se grátis
           </Link>
         </>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn, getSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const explicitNext = params.get('next');
   const [submitting, setSubmitting] = useState(false);
@@ -54,10 +53,8 @@ export function LoginForm() {
             : '/buscar';
     }
 
-    setSubmitting(false);
     toast.success('Bem-vindo de volta!');
-    router.push(destination);
-    router.refresh();
+    window.location.assign(destination);
   };
 
   return (

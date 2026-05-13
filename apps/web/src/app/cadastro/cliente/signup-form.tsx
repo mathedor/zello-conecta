@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,8 @@ import { Label } from '@/components/ui/label';
 import { PhoneInput } from '@/components/ui/phone-input';
 
 export function ClientSignupForm() {
-  const router = useRouter();
+  const params = useSearchParams();
+  const next = params.get('next');
   const [submitting, setSubmitting] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
@@ -48,11 +49,12 @@ export function ClientSignupForm() {
 
       if (login?.error) {
         toast.success('Conta criada!', { description: 'Faça login para continuar.' });
-        router.push('/entrar');
+        window.location.assign(
+          next ? `/entrar?next=${encodeURIComponent(next)}` : '/entrar',
+        );
       } else {
         toast.success('Tudo certo!', { description: 'Bem-vindo à Zello Conecta.' });
-        router.push('/');
-        router.refresh();
+        window.location.assign(next || '/buscar');
       }
     } catch (err) {
       toast.error('Erro ao cadastrar', {

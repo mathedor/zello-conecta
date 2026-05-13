@@ -51,7 +51,13 @@ const PROFILES = [
   },
 ];
 
-export default function CadastroEscolhaPage() {
+export default async function CadastroEscolhaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const nextQuery = next ? `?next=${encodeURIComponent(next)}` : '';
   return (
     <main className="container py-10 md:py-16">
       <div className="mx-auto max-w-4xl">
@@ -74,7 +80,7 @@ export default function CadastroEscolhaPage() {
             return (
               <Link
                 key={p.href}
-                href={p.href}
+                href={`${p.href}${nextQuery}`}
                 className="group relative flex flex-col rounded-3xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-zello-300 hover:shadow-lg md:p-8"
               >
                 <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-zello-50 text-zello-600 transition-colors group-hover:bg-zello-600 group-hover:text-white">
@@ -116,7 +122,10 @@ export default function CadastroEscolhaPage() {
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
           Já tem conta?{' '}
-          <Link href="/entrar" className="font-medium text-zello-600 hover:underline">
+          <Link
+            href={next ? `/entrar?next=${encodeURIComponent(next)}` : '/entrar'}
+            className="font-medium text-zello-600 hover:underline"
+          >
             Entrar
           </Link>
         </p>
