@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get('next') ?? '/';
+  const explicitNext = params.get('next');
   const [submitting, setSubmitting] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
@@ -33,17 +33,30 @@ export function LoginForm() {
       password: values.password,
       redirect: false,
     });
-    setSubmitting(false);
 
     if (res?.error) {
+      setSubmitting(false);
       toast.error('Credenciais inválidas', {
         description: 'Verifique seu email e senha e tente novamente.',
       });
       return;
     }
 
+    let destination = explicitNext ?? '';
+    if (!destination) {
+      const session = await getSession();
+      const role = (session?.user as { role?: string } | undefined)?.role;
+      destination =
+        role === 'ADMIN'
+          ? '/admin'
+          : role === 'PROFESSIONAL'
+            ? '/painel-pro'
+            : '/buscar';
+    }
+
+    setSubmitting(false);
     toast.success('Bem-vindo de volta!');
-    router.push(next);
+    router.push(destination);
     router.refresh();
   };
 
