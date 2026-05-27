@@ -78,7 +78,7 @@ export function CategoriasManager({ initial }: { initial: CategoryItem[] }) {
         </Button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-cards">
           <thead className="border-b border-border bg-secondary/40">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">

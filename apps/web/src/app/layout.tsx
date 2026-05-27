@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { ChatFab } from '@/components/layout/chat-fab';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
+import { TableCards } from '@/components/table-cards';
 import './globals.css';
 
 const inter = Inter({
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <ChatFab />
           <Toaster position="top-center" richColors closeButton />
+          <TableCards />
         </Providers>
       </body>
     </html>

@@ -87,7 +87,7 @@ export default async function RelatorioEstadosPage({ searchParams }: PageProps) 
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-cards">
                 <thead className="border-b border-border bg-secondary/40">
                   <tr>
                     <SortableTh field="state" label="UF" basePath={basePath} />

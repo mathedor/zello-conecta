@@ -98,7 +98,7 @@ export default async function RelatorioProfissionaisPage({ searchParams }: PageP
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-cards">
                 <thead className="border-b border-border bg-secondary/40">
                   <tr>
                     <SortableTh field="name" label="Nome" basePath={basePath} />
