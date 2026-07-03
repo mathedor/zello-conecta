@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zello Conecta · Apresentação da Plataforma</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --z:#4a7dff; --z-soft:#8eaeff; --z-deep:#1d36f5; --z-vivid:#345aff;
+  --ink:#070b16; --panel:#0e1424; --panel2:#131a2e;
+  --line:rgba(142,174,255,.10); --line2:rgba(142,174,255,.18);
+  --tx:#f2f5fc; --mut:#94a0bd; --mut2:#5d6883;
+  --red:#fb7185; --amber:#fbbf24; --grn:#34d399; --org:#fb923c;
+  --sans:'Inter',system-ui,sans-serif; --disp:'Manrope','Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+img{max-width:100%;display:block}
+
+#deck{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+#deck::-webkit-scrollbar{width:0}
+.slide{min-height:100vh;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;justify-content:center;padding:64px 88px 72px;overflow:hidden}
+.slide::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:radial-gradient(ellipse 90% 80% at 70% 30%,#000 20%,transparent 80%)}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.24;pointer-events:none}
+.glow.a{width:540px;height:540px;background:var(--z-deep);top:-170px;right:-130px}
+.glow.b{width:420px;height:420px;background:#0e7490;bottom:-180px;left:-140px;opacity:.15}
+
+#bar{position:fixed;top:0;left:0;right:0;height:4px;background:rgba(255,255,255,.06);z-index:60}
+#bar>i{display:block;height:100%;width:0;background:var(--z);box-shadow:0 0 18px var(--z);transition:width .3s}
+#hud{position:fixed;top:18px;right:26px;z-index:60;display:flex;align-items:center;gap:14px;font-family:var(--disp);font-size:12px;color:var(--mut)}
+#hud b{color:var(--tx);font-weight:700}
+#hud .k{border:1px solid var(--line2);border-radius:7px;padding:4px 8px;color:var(--mut);cursor:pointer;transition:.2s}
+#hud .k:hover{color:#fff;background:var(--z-vivid);border-color:var(--z-vivid)}
+#rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:11px}
+#rail a{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--mut2);font-size:11px;font-family:var(--disp);font-weight:700;letter-spacing:.02em}
+#rail .d{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--mut2);transition:.25s;flex:none}
+#rail a .t{opacity:0;transform:translateX(-6px);transition:.25s;white-space:nowrap}
+#rail a:hover .t,#rail a.on .t{opacity:1;transform:none}
+#rail a.on{color:var(--z-soft)}
+#rail a.on .d{background:var(--z);border-color:var(--z);box-shadow:0 0 12px var(--z);transform:scale(1.15)}
+
+.kick{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--z-soft);display:flex;align-items:center;gap:12px}
+.kick::before{content:"";width:26px;height:2px;background:var(--z);display:inline-block;border-radius:2px}
+h1.big{font-family:var(--disp);font-weight:800;font-size:clamp(38px,5.2vw,74px);line-height:1.02;letter-spacing:-.025em;margin:18px 0}
+h2.sec{font-family:var(--disp);font-weight:800;font-size:clamp(30px,3.4vw,48px);line-height:1.05;letter-spacing:-.02em;margin:14px 0 10px}
+.lead{font-size:clamp(16px,1.5vw,20px);color:var(--mut);max-width:52ch;line-height:1.55}
+.kid{font-size:17px;line-height:1.6;color:#e2e7f2;max-width:52ch}
+.kid b{color:var(--z-soft);font-weight:700}
+.kid .em{background:linear-gradient(transparent 62%,rgba(74,125,255,.32) 0);padding:0 2px}
+
+#cover,#end{text-align:center;align-items:center}
+.wordmark{font-family:var(--disp);font-weight:800;font-size:clamp(30px,3.6vw,46px);letter-spacing:-.03em}
+.wordmark .zm{display:inline-flex;width:1.15em;height:1.15em;border-radius:.28em;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));color:#fff;align-items:center;justify-content:center;margin-right:12px;vertical-align:-12%}
+.wordmark b{color:var(--z-soft);font-weight:600}
+#cover .kick,#end .kick{justify-content:center;margin-top:26px}
+#cover h1 .l,#end h2 .l{color:var(--z-soft)}
+#cover .sub{font-size:clamp(16px,1.6vw,21px);color:var(--mut);max-width:64ch;margin:8px auto 0}
+.meta{position:absolute;bottom:34px;left:0;right:0;display:flex;justify-content:space-between;padding:0 88px;font-size:12px;color:var(--mut2);font-family:var(--disp)}
+kbd{border:1px solid var(--line2);border-radius:5px;padding:1px 6px;font-family:var(--disp);font-size:10px}
+.cta{display:inline-block;margin-top:30px;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));color:#fff;font-family:var(--disp);font-weight:800;font-size:17px;padding:16px 34px;border-radius:999px;box-shadow:0 14px 44px -10px rgba(52,90,255,.6)}
+.contact{margin-top:22px;font-size:13px;color:var(--mut)}
+.contact b{color:var(--tx)}
+
+.vg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.v{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+.v .ic{font-size:30px;margin-bottom:12px}
+.v h3{font-family:var(--disp);font-weight:800;font-size:19px;margin-bottom:8px}
+.v p{font-size:13.5px;color:var(--mut);line-height:1.55}
+.overline{margin-top:30px;font-size:12.5px;color:var(--mut2);font-family:var(--disp)}
+
+.levelintro{position:relative;z-index:2;max-width:1300px;margin:0 auto;width:100%}
+.levelintro .no{font-family:var(--disp);font-weight:800;font-size:clamp(70px,9vw,130px);line-height:1;color:transparent;-webkit-text-stroke:2px var(--z);opacity:.9}
+.levelintro .who{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--z-soft)}
+.levelintro h2{font-family:var(--disp);font-weight:800;font-size:clamp(40px,5vw,72px);letter-spacing:-.02em;line-height:1}
+.levelintro .lead{margin-top:18px}
+.idx{display:flex;flex-wrap:wrap;gap:9px;margin-top:30px;max-width:900px}
+.idx span{font-family:var(--disp);font-size:12px;font-weight:700;color:var(--mut);background:var(--panel);border:1px solid var(--line);padding:7px 13px;border-radius:20px}
+.idx span b{color:var(--z-soft);margin-right:6px}
+
+.feat{position:relative;z-index:2;display:grid;grid-template-columns:minmax(320px,42%) 1fr;gap:60px;align-items:center;width:100%;max-width:1500px;margin:0 auto}
+.feat .txt .num{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--mut2)}
+.feat .txt h2{font-family:var(--disp);font-weight:800;font-size:clamp(28px,3vw,44px);line-height:1.06;letter-spacing:-.02em;margin:14px 0 16px}
+.feat .txt h2 .hl{color:var(--z-soft)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pill{font-family:var(--disp);font-size:12px;font-weight:700;color:var(--tx);background:var(--panel2);border:1px solid var(--line2);border-radius:20px;padding:6px 12px}
+.pill.blue{background:rgba(74,125,255,.14);border-color:rgba(74,125,255,.45);color:var(--z-soft)}
+
+.mockwrap{position:relative}
+.mockwrap::after{content:"";position:absolute;inset:-30px;background:radial-gradient(60% 60% at 50% 40%,rgba(52,90,255,.12),transparent 70%);z-index:-1}
+.browser{background:var(--panel);border:1px solid var(--line2);border-radius:16px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.7)}
+.browser .top{display:flex;align-items:center;gap:8px;padding:11px 14px;background:#0a0f1d;border-bottom:1px solid var(--line)}
+.browser .top i{width:11px;height:11px;border-radius:50%;background:#232c44;display:inline-block}
+.browser .top .url{margin-left:12px;flex:1;background:#111830;border:1px solid var(--line);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--mut);font-family:var(--disp)}
+.browser .top .url b{color:var(--z-soft)}
+.browser .body{padding:20px}
+.phone{width:270px;margin:0 auto;background:var(--panel);border:8px solid #131a2e;border-radius:38px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.8);position:relative}
+.phone .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:90px;height:20px;background:#131a2e;border-radius:12px;z-index:5}
+.phone .scr{padding:34px 14px 18px;min-height:500px}
+.phone .bnav{position:absolute;bottom:0;left:0;right:0;background:#0a0f1d;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;padding:8px 6px 10px;font-size:8px;color:var(--mut2);font-family:var(--disp);font-weight:700}
+.phone .bnav .bi{display:flex;flex-direction:column;align-items:center;gap:3px}
+.phone .bnav .bi i{width:16px;height:16px;border-radius:5px;background:currentColor;opacity:.5}
+.phone .bnav .bi.c{margin-top:-22px}
+.phone .bnav .bi.c i{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));opacity:1;box-shadow:0 6px 18px rgba(52,90,255,.5)}
+.app{display:grid;grid-template-columns:150px 1fr;min-height:340px}
+.app .side{background:#0a0f1d;border-right:1px solid var(--line);padding:14px 12px}
+.app .side .lg{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-weight:800;font-size:13px;margin-bottom:16px}
+.app .side .lg .m{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep))}
+.app .side .nv{font-size:11.5px;color:var(--mut);padding:7px 9px;border-radius:7px;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.app .side .nv.on{background:rgba(74,125,255,.14);color:var(--z-soft);font-weight:700}
+.app .side .nv .ic{width:14px;height:14px;border-radius:4px;background:currentColor;opacity:.5}
+.app .main{padding:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.kpi .l{font-size:10.5px;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;font-family:var(--disp)}
+.kpi .v{font-family:var(--disp);font-weight:800;font-size:23px;margin-top:5px;letter-spacing:-.02em}
+.kpi .dl{font-size:11px;margin-top:3px;color:var(--grn);font-weight:600}
+.kpi.hi{background:linear-gradient(160deg,rgba(74,125,255,.18),rgba(74,125,255,.03));border-color:rgba(74,125,255,.4)}
+.kpi.hi .v{color:var(--z-soft)}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card .h{font-family:var(--disp);font-size:12.5px;font-weight:700;color:var(--mut);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .h .tag{font-size:10px;color:var(--z-soft);background:rgba(74,125,255,.13);border-radius:5px;padding:2px 7px;white-space:nowrap}
+.bars{display:flex;align-items:flex-end;gap:9px;height:110px}
+.bars .b{flex:1;background:linear-gradient(180deg,var(--z),rgba(74,125,255,.22));border-radius:5px 5px 0 0;min-height:6px}
+.line-lbls{display:flex;gap:9px;margin-top:8px}
+.line-lbls span{flex:1;text-align:center;font-size:9px;color:var(--mut2);font-family:var(--disp)}
+.rows{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.rows .r{display:grid;grid-template-columns:1.6fr 1fr 1fr .8fr;gap:8px;padding:10px 13px;background:var(--panel2);font-size:11.5px;align-items:center}
+.rows .r.hd{background:#0a0f1d;color:var(--mut);font-family:var(--disp);font-size:10px;letter-spacing:.05em;text-transform:uppercase}
+.rows .r b{font-weight:600}
+.st{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-block;justify-self:start}
+.st.ok{background:rgba(52,211,153,.15);color:var(--grn)}
+.st.wa{background:rgba(251,191,36,.15);color:var(--amber)}
+.st.no{background:rgba(251,113,133,.15);color:var(--red)}
+.st.bl{background:rgba(74,125,255,.16);color:var(--z-soft)}
+.list{display:flex;flex-direction:column;gap:7px}
+.li{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:11.5px}
+.li .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(140deg,var(--z-vivid),var(--z-deep));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;font-family:var(--disp);flex:none}
+.li .g{flex:1;min-width:0}
+.li .g b{display:block;font-weight:600}
+.li .g small{color:var(--mut);font-size:10px}
+.stars{color:var(--amber);letter-spacing:1px;font-size:12px}
+.qrbox{width:120px;height:120px;margin:0 auto;border-radius:14px;background:#fff;padding:10px}
+.qrbox img{width:100%;height:100%;image-rendering:pixelated}
+.progressbar{height:8px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:6px}
+.progressbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--z),var(--z-deep))}
+.calgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.calgrid .slot{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:8px 4px;text-align:center;font-size:10.5px;font-family:var(--disp);font-weight:700}
+.calgrid .slot.on{background:rgba(74,125,255,.2);border-color:var(--z);color:var(--z-soft)}
+.calgrid .slot.off{opacity:.3;text-decoration:line-through}
+.chatmsg{background:var(--panel2);border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:9px 11px;font-size:11px;max-width:85%;margin-bottom:6px}
+.chatmsg.me{background:rgba(74,125,255,.16);border-color:rgba(74,125,255,.35);border-radius:12px 12px 3px 12px;margin-left:auto}
+.big-blue{background:linear-gradient(120deg,var(--z-deep),var(--z-vivid));border-radius:16px;padding:16px;margin-bottom:10px}
+.big-blue small{color:rgba(255,255,255,.75);font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;font-weight:800;font-family:var(--disp)}
+.big-blue b{display:block;font-family:var(--disp);font-size:27px;font-weight:800;margin-top:3px}
+.mail{background:var(--panel2);border:1px solid var(--line2);border-radius:14px;overflow:hidden;max-width:420px}
+.mail .mh{background:#0a0f1d;padding:11px 14px;font-size:11px;color:var(--mut);border-bottom:1px solid var(--line)}
+.mail .mh b{color:var(--tx)}
+.mail .mb{padding:16px 14px;font-size:12px;color:#dde3f0;line-height:1.55}
+.escrowflow{display:flex;flex-direction:column;gap:8px}
+.escrowflow .ef{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:11.5px}
+.escrowflow .ef .n{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:800;font-size:12px;flex:none}
+.escrowflow .ef.hi{border-color:rgba(52,211,153,.4);background:linear-gradient(160deg,rgba(52,211,153,.1),transparent)}
+
+.revgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:30px}
+.rev{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.rev .ic{font-size:22px}
+.rev h4{font-family:var(--disp);font-weight:800;font-size:14.5px;margin:8px 0 4px}
+.rev p{font-size:11.5px;color:var(--mut);line-height:1.5}
+.rev b{color:var(--z-soft)}
+
+@media (max-width:980px){
+  .slide{padding:56px 26px 64px}
+  #rail{display:none}
+  .feat{grid-template-columns:1fr;gap:30px}
+  .feat .mockwrap{order:-1}
+  .vg{grid-template-columns:1fr}
+  .revgrid{grid-template-columns:1fr 1fr}
+  .meta{padding:0 26px}
+  .phone{width:240px}.phone .scr{min-height:440px}
+  .app{grid-template-columns:1fr}.app .side{display:none}
+}
+@media (max-width:560px){.revgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="bar"><i></i></div>
+<div id="hud"><span><b id="cur">01</b> / <span id="tot">00</span></span><span class="k" onclick="document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()">⛶ F</span></div>
+<nav id="rail"></nav>
+<main id="deck"></main>
+
+<script>
+const SHOW_ADMIN = __SHOW_ADMIN__;
+
+const QR = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' shape-rendering='crispEdges'><rect width='100' height='100' fill='%23fff'/>`+
+  Array.from({length:11},(_,y)=>Array.from({length:11},(_,x)=>((x*7+y*13+x*y)%3===0||(x<3&&y<3)||(x>7&&y<3)||(x<3&&y>7))?`<rect x='${9*x}' y='${9*y}' width='9' height='9' fill='%23000'/>`:'').join('')).join('')+`</svg>`);
+
+const LEVELS = [
+  {id:'intro', label:'Início'},
+  {id:'cli',   label:'Cliente'},
+  {id:'pro',   label:'Profissional'},
+  ...(SHOW_ADMIN?[{id:'admin', label:'Administração'}]:[]),
+  {id:'fim',   label:'Fim'},
+];
+
+const appShell = (items, active, main) => `
+<div class="browser"><div class="top"><i></i><i></i><i></i><div class="url">zelloconecta.com.br/<b>${active.toLowerCase().replace(/\\s/g,'-')}</b></div></div>
+<div class="app">
+  <div class="side">
+    <div class="lg"><span class="m"></span> Zello</div>
+    ${items.map(n=>`<div class="nv ${n===active?'on':''}"><span class="ic"></span>${n}</div>`).join('')}
+  </div>
+  <div class="main">${main}</div>
+</div></div>`;
+
+const PRO_NAV = ['Painel','Serviços','Agenda','Pedidos','Mensagens','Financeiro'];
+const ADMIN_NAV = ['Dashboard','Usuários','Profissionais','KYC','Saques','Disputas','Categorias'];
+
+const phone = (scr, nav=true) => `<div class="phone"><div class="notch"></div><div class="scr" style="${nav?'padding-bottom:70px':''}">${scr}</div>${nav?`
+  <div class="bnav">
+    <span class="bi"><i></i>Agenda</span>
+    <span class="bi"><i></i>Categorias</span>
+    <span class="bi c"><i></i></span>
+    <span class="bi"><i></i>Conta</span>
+    <span class="bi"><i></i>Menu</span>
+  </div>`:''}</div>`;
+
+const SLIDES = [];
+const S = (o)=>SLIDES.push(o);
+
+/* ========================= CAPA ========================= */
+S({type:'cover'});
+S({type:'value'});
+S({type:'levelmap'});
+
+/* ========================= 01 CLIENTE ========================= */
+S({type:'intro', level:'cli', no:'01', who:'A experiência de quem contrata', title:'Cliente',
+  desc:'Precisa de advogado, encanador, designer, personal? O cliente busca, compara profissionais de verdade (com avaliação e agenda real), agenda o horário e paga com o dinheiro protegido até o serviço ser entregue.',
+  idx:['Busca com filtros','Perfil do profissional','Agendamento com hora marcada','Checkout PIX & cartão','Pagamento protegido (escrow)','Acompanhar & concluir','Avaliações','Chat com o profissional','Mobile-first']});
+
+S({level:'cli', n:'Busca com filtros', title:['Ache o profissional certo ','sem cadastro'],
+  kid:'A navegação é <b>totalmente aberta</b>: qualquer pessoa busca, filtra e compara sem criar conta — o login só aparece na hora de fechar. Filtro por <span class="em">categoria, cidade, preço e nota</span>, com ordenação.',
+  pills:['Sem login pra navegar','Filtro por cidade e categoria','Faixa de preço e nota mínima','Só aparece profissional verificado'],
+  mock:`<div class="browser"><div class="top"><i></i><i></i><i></i><div class="url">zelloconecta.com.br/<b>buscar?q=eletricista</b></div></div>
+    <div class="body">
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <span class="st bl">📍 São Paulo · SP</span><span class="st bl">⚡ Reformas</span><span class="st bl">⭐ 4+</span><span class="st bl">até R$ 150/h</span>
+      </div>
+      <div class="list">
+        <div class="li"><div class="av">PA</div><div class="g"><b>Pedro Almeida ✓</b><small>Eletricista e reformas · Belo Horizonte</small><span class="stars">★★★★★ <span style="color:var(--mut);font-size:9px">4,9 (87)</span></span></div><b style="color:var(--z-soft)">R$ 120/h</b></div>
+        <div class="li"><div class="av">JR</div><div class="g"><b>José Ramos ✓</b><small>Elétrica residencial · São Paulo</small><span class="stars">★★★★☆ <span style="color:var(--mut);font-size:9px">4,6 (34)</span></span></div><b style="color:var(--z-soft)">R$ 95/h</b></div>
+        <div class="li"><div class="av">MF</div><div class="g"><b>Marcos Freitas ✓</b><small>Instalações · Campinas</small><span class="stars">★★★★★ <span style="color:var(--mut);font-size:9px">4,8 (52)</span></span></div><b style="color:var(--z-soft)">R$ 110/h</b></div>
+      </div>
+    </div></div>`});
+
+S({level:'cli', n:'Perfil do profissional', title:['A vitrine que ','gera confiança'],
+  kid:'Cada profissional tem uma <b>página própria</b>: foto, selo de verificado (KYC), nota com número de avaliações, galeria de trabalhos e o catálogo de serviços com preço na cara. O cliente decide <span class="em">com informação, não no escuro</span>.',
+  pills:['Selo verificado (documentos checados)','Avaliações reais de quem contratou','Galeria de trabalhos','Serviços com preço transparente'],
+  mock:`<div class="browser"><div class="top"><i></i><i></i><i></i><div class="url">zelloconecta.com.br/<b>profissional/pedro-almeida</b></div></div>
+    <div class="body">
+      <div class="li" style="margin-bottom:10px;border:0;background:transparent;padding:0">
+        <div class="av" style="width:44px;height:44px;font-size:15px">PA</div>
+        <div class="g"><b style="font-size:14px">Pedro Almeida <span class="st ok" style="font-size:8px">✓ verificado</span></b><small>Eletricista e reformas · Belo Horizonte/MG</small><span class="stars">★★★★★ <span style="color:var(--mut);font-size:9px">4,9 · 87 avaliações · 142 serviços</span></span></div>
+      </div>
+      <div class="grid3" style="margin-bottom:10px">
+        ${['#1a2b52','#14224a','#1d3160'].map(c=>`<div style="height:52px;border-radius:9px;background:linear-gradient(150deg,${c},#0a0f1d);border:1px solid var(--line)"></div>`).join('')}
+      </div>
+      <div class="rows">
+        <div class="r" style="grid-template-columns:1.8fr 1fr .8fr"><b>Instalação elétrica completa</b><span>R$ 120/h</span><span class="st bl">agendar</span></div>
+        <div class="r" style="grid-template-columns:1.8fr 1fr .8fr"><b>Troca de quadro de luz</b><span>R$ 450 fixo</span><span class="st bl">agendar</span></div>
+      </div>
+    </div></div>`});
+
+S({level:'cli', n:'Agendamento', title:['Hora marcada ','de verdade'],
+  kid:'Nada de “te chamo no zap pra combinar”: o cliente vê <b>a agenda real do profissional</b> e escolhe o horário livre, em blocos de 30 minutos. O sistema já desconta folgas, bloqueios e outros agendamentos.',
+  pills:['Agenda real, ao vivo','Slots de 30 em 30 min','Sem conflito de horário','Confirmação na hora'],
+  mock: phone(`
+    <div style="font-family:var(--disp);font-weight:800;font-size:13px;margin-bottom:8px">Escolha o horário</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      ${['SEG 8','TER 9','QUA 10','QUI 11'].map((d,i)=>`<div class="slot ${i===1?'on':''}" style="flex:1;background:${i===1?'rgba(74,125,255,.2)':'var(--panel2)'};border:1px solid ${i===1?'var(--z)':'var(--line2)'};border-radius:9px;padding:7px 2px;text-align:center;font-size:9.5px;font-family:var(--disp);font-weight:800;${i===1?'color:var(--z-soft)':''}">${d.split(' ')[0]}<br/><span style="font-size:12px">${d.split(' ')[1]}</span></div>`).join('')}
+    </div>
+    <div class="calgrid">
+      <div class="slot off">08:00</div><div class="slot">09:00</div><div class="slot on">10:30</div><div class="slot">11:00</div>
+      <div class="slot off">14:00</div><div class="slot">14:30</div><div class="slot">15:00</div><div class="slot off">16:00</div>
+    </div>
+    <div style="margin-top:12px;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));border-radius:10px;padding:10px;text-align:center;font-family:var(--disp);font-weight:800;font-size:12px">Confirmar terça · 10:30 →</div>`)});
+
+S({level:'cli', n:'Checkout PIX & cartão', title:['Pagou em segundos, ','do jeito que preferir'],
+  kid:'PIX com QR e copia-e-cola (confirma sozinho) ou <b>cartão em até 12x</b>. O valor não vai direto pro profissional — vai pra <span class="em">custódia da plataforma</span>, e é aí que mora a mágica do próximo slide.',
+  pills:['PIX com confirmação automática','Cartão parcelado','Recibo por email','Valor vai pra custódia'],
+  mock: phone(`
+    <div style="font-family:var(--disp);font-weight:800;font-size:13px;margin-bottom:8px">Pagamento</div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="slot on" style="background:rgba(74,125,255,.2);border:1px solid var(--z);border-radius:10px;padding:9px;text-align:center;font-family:var(--disp);font-weight:800;font-size:11px;color:var(--z-soft)">⚡ PIX</div>
+      <div class="slot" style="background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:9px;text-align:center;font-family:var(--disp);font-weight:800;font-size:11px">💳 Cartão 12x</div>
+    </div>
+    <div class="qrbox"><img src="${QR}"/></div>
+    <div style="text-align:center;font-size:10px;color:var(--mut);margin:8px 0">escaneie ou copie o código</div>
+    <div class="card"><div class="h">Instalação elétrica · ter 10:30</div>
+      <div style="font-family:var(--disp);font-weight:800;font-size:20px;color:var(--z-soft)">R$ 360,00</div>
+      <div style="font-size:9.5px;color:var(--grn);margin-top:4px">🛡️ protegido pela Zello até a conclusão</div>
+    </div>`, false)});
+
+S({level:'cli', n:'Pagamento protegido', title:['O dinheiro só anda ','quando o serviço chega'],
+  kid:'É o coração da Zello: o pagamento fica <b>retido em custódia</b>. O profissional só recebe quando o cliente confirma a conclusão — ou automaticamente 48h após o prazo, se ninguém reclamar. Deu problema? <span class="em">Abre disputa e a plataforma arbitra</span>.',
+  pills:['Custódia (escrow) nativa','Cliente confirma → libera','48h sem reclamação → libera sozinho','Disputa com arbitragem'],
+  mock:`<div class="escrowflow" style="max-width:430px">
+    <div class="ef"><span class="n">1</span><span>Cliente paga <b>R$ 360</b> → valor fica <b>retido na Zello</b></span></div>
+    <div class="ef"><span class="n">2</span><span>Profissional executa o serviço na data marcada</span></div>
+    <div class="ef"><span class="n">3</span><span>Cliente confirma a conclusão <span style="color:var(--mut)">(ou 48h se passam sem disputa)</span></span></div>
+    <div class="ef hi"><span class="n" style="background:var(--grn);color:#04291c">✓</span><span><b style="color:var(--grn)">R$ 288 liberados</b> pro profissional · R$ 72 (20%) ficam com a plataforma</span></div>
+    <div class="ef" style="border-style:dashed"><span class="n" style="background:var(--red)">!</span><span>Problema? <b>Disputa em até 48h</b> — admin analisa e decide: reembolso ou liberação</span></div>
+  </div>`});
+
+S({level:'cli', n:'Acompanhar & concluir', title:['Tudo do agendamento ','num lugar só'],
+  kid:'Em “Meus agendamentos” o cliente vê status, data, valor e as ações de cada serviço: <b>concluir</b> (libera o pagamento), <b>conversar</b> com o profissional ou <b>abrir disputa</b>. Transparência do início ao fim.',
+  pills:['Status em tempo real','Botão de concluir','Abrir disputa em 1 toque','Histórico completo'],
+  mock: phone(`
+    <div style="font-family:var(--disp);font-weight:800;font-size:13px;margin-bottom:8px">Meus agendamentos</div>
+    <div class="card" style="margin-bottom:8px"><div class="h">⚡ Instalação elétrica <span class="tag">amanhã 10:30</span></div>
+      <div style="font-size:10.5px;color:var(--mut)">Pedro Almeida · R$ 360 · <span style="color:var(--grn)">pago ✓ protegido</span></div>
+    </div>
+    <div class="card" style="margin-bottom:8px"><div class="h">🎨 Logo da empresa <span class="tag" style="color:var(--grn);background:rgba(52,211,153,.12)">entregue</span></div>
+      <div style="font-size:10.5px;color:var(--mut);margin-bottom:8px">Camila Santos · R$ 800</div>
+      <div class="grid2">
+        <span class="st ok" style="text-align:center;justify-self:stretch;padding:7px;font-weight:800">CONCLUIR ✓</span>
+        <span class="st no" style="text-align:center;justify-self:stretch;padding:7px">abrir disputa</span>
+      </div>
+    </div>`)});
+
+S({level:'cli', n:'Avaliações', title:['Quem faz bem feito, ','sobe'],
+  kid:'Depois de concluído, o cliente dá <b>nota de 1 a 5 e escreve como foi</b>. A média entra no perfil do profissional na hora — e é o que ordena a busca. O marketplace se cura sozinho: <span class="em">bom atendimento vira mais cliente</span>.',
+  pills:['1 avaliação por serviço concluído','Recalcula a média na hora','Aparece no perfil público','Profissional é notificado'],
+  mock: phone(`
+    <div style="text-align:center;margin-bottom:12px">
+      <div class="av" style="width:52px;height:52px;font-size:18px;margin:0 auto 8px;border-radius:50%;background:linear-gradient(140deg,var(--z-vivid),var(--z-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--disp)">CS</div>
+      <div style="font-family:var(--disp);font-weight:800;font-size:13px">Como foi com a Camila?</div>
+    </div>
+    <div style="text-align:center;font-size:30px;letter-spacing:6px;color:var(--amber);margin-bottom:10px">★★★★★</div>
+    <div class="card" style="margin-bottom:10px"><div style="font-size:11px;color:#dde3f0">“Entregou antes do prazo e o logo ficou incrível. Super recomendo!”</div></div>
+    <div style="background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));border-radius:10px;padding:10px;text-align:center;font-family:var(--disp);font-weight:800;font-size:12px">Enviar avaliação</div>`, false)});
+
+S({level:'cli', n:'Chat com o profissional', title:['Combina os detalhes ','sem sair da Zello'],
+  kid:'Conversa direta cliente↔profissional, ligada ao agendamento: <b>“leva escada?”, “qual o tamanho da parede?”</b>. Tudo registrado — o que protege os dois lados se der disputa. Com notificação de mensagem nova.',
+  pills:['Chat por agendamento','Histórico que protege os dois','Notificação de não-lida','Central de notificações'],
+  mock: phone(`
+    <div class="li" style="margin-bottom:10px"><div class="av">PA</div><div class="g"><b>Pedro Almeida</b><small>Instalação elétrica · ter 10:30</small></div></div>
+    <div class="chatmsg">Oi! Preciso levar escada ou você tem aí?</div>
+    <div class="chatmsg me">Tenho escada sim! O quadro fica a 2m de altura.</div>
+    <div class="chatmsg">Perfeito. Chego 10:20 então 👍</div>
+    <div class="chatmsg me">Combinado!</div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <div style="flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:99px;padding:8px 12px;font-size:10px;color:var(--mut)">Escreva uma mensagem…</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));display:flex;align-items:center;justify-content:center;font-size:13px">➤</div>
+    </div>`)});
+
+S({level:'cli', n:'Mobile-first', title:['Feito pro dedão, ','nascido pras lojas'],
+  kid:'A web já se comporta como app: <b>bottom navigation estilo iFood</b>, busca central em destaque, localização automática no topo. E os apps nativos <b>iOS e Android</b> (mesma base, via Expo) vão pras lojas com push de verdade.',
+  pills:['Bottom nav com busca central','Localização automática','Apps iOS + Android (Expo)','Push nativo nos apps'],
+  mock: phone(`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:var(--disp);font-weight:800;font-size:14px"><span style="display:inline-flex;width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));color:#fff;align-items:center;justify-content:center;font-size:11px;margin-right:6px">Z</span>Zello</div>
+      <span class="st bl">📍 São Paulo</span>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--z-deep),var(--z-vivid));border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="font-family:var(--disp);font-weight:800;font-size:13px;margin-bottom:8px">O que você precisa hoje?</div>
+      <div style="background:#fff;border-radius:99px;padding:8px 14px;font-size:10px;color:#555">🔍 eletricista, advogado, designer…</div>
+    </div>
+    <div class="grid4">
+      ${['⚡','⚖️','🎨','🏥','🔧','📚','🏠','💼'].map(e=>`<div style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center;font-size:16px">${e}</div>`).join('')}
+    </div>`)});
+
+/* ========================= 02 PROFISSIONAL ========================= */
+S({type:'intro', level:'pro', no:'02', who:'Para quem vive do próprio trabalho', title:'Profissional',
+  desc:'O escritório digital do autônomo: vitrine verificada, catálogo de serviços, agenda que se gerencia sozinha e a garantia de receber por todo trabalho concluído — sem calote, sem perseguir cliente.',
+  idx:['Cadastro & verificação','Catálogo de serviços','Agenda inteligente','Pedidos & clientes','Financeiro & saque','Google Calendar & iCal','Reputação que vende']});
+
+S({level:'pro', n:'Cadastro & verificação', title:['No ar em minutos, ','com selo de confiança'],
+  kid:'O profissional se cadastra e <b>já pode montar a vitrine</b> — sem fila de aprovação. Em paralelo, envia os documentos (CPF/CNPJ + foto) e ganha o <b>selo ✓ verificado</b>, que é o que o coloca na busca. Confiança <span class="em">sem burocracia que trava</span>.',
+  pills:['Vai ao ar direto','KYC com documento e selo','Só verificado aparece na busca','Email a cada etapa'],
+  mock:`<div class="browser"><div class="top"><i></i><i></i><i></i><div class="url">zelloconecta.com.br/<b>painel-pro/kyc</b></div></div>
+    <div class="body">
+      <div class="escrowflow">
+        <div class="ef"><span class="n">1</span><span>Conta criada · perfil e serviços liberados</span></div>
+        <div class="ef"><span class="n">2</span><span>Documentos enviados <span class="st wa" style="margin-left:6px">em análise</span></span></div>
+        <div class="ef hi"><span class="n" style="background:var(--grn);color:#04291c">✓</span><span><b style="color:var(--grn)">Verificado!</b> Você já aparece na busca com o selo ✓</span></span></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="kpi"><div class="l">Tempo médio</div><div class="v">&lt; 24h</div></div>
+        <div class="kpi hi"><div class="l">Custo</div><div class="v">R$ 0</div></div>
+      </div>
+    </div></div>`});
+
+S({level:'pro', n:'Catálogo de serviços', title:['Seu cardápio, ','seus preços'],
+  kid:'Cada serviço com <b>título, descrição, fotos e preço</b> — por hora ou valor fechado (empreitada), presencial ou remoto. Pausou um serviço? Some da vitrine na hora. É <span class="em">o profissional no controle do próprio negócio</span>.',
+  pills:['Preço por hora ou fechado','Até 10 fotos por serviço','Presencial ou remoto','Ativa e pausa quando quiser'],
+  mock: appShell(PRO_NAV,'Serviços',`
+    <div class="rows">
+      <div class="r hd" style="grid-template-columns:1.8fr 1fr .8fr"><span>Serviço</span><span>Preço</span><span>Status</span></div>
+      <div class="r" style="grid-template-columns:1.8fr 1fr .8fr"><b>⚡ Instalação elétrica</b><span>R$ 120/h</span><span class="st ok">ativo</span></div>
+      <div class="r" style="grid-template-columns:1.8fr 1fr .8fr"><b>🔌 Troca de quadro de luz</b><span>R$ 450 fixo</span><span class="st ok">ativo</span></div>
+      <div class="r" style="grid-template-columns:1.8fr 1fr .8fr"><b>💡 Projeto de iluminação</b><span>R$ 90/h</span><span class="st wa">pausado</span></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="kpi"><div class="l">Visualizações (30d)</div><div class="v">1.204</div></div>
+      <div class="kpi hi"><div class="l">Contratações</div><div class="v">18</div><div class="dl">▲ 5</div></div>
+    </div>`)});
+
+S({level:'pro', n:'Agenda inteligente', title:['Sua semana, ','no piloto automático'],
+  kid:'O profissional define os horários de trabalho <b>uma vez</b> (com várias faixas por dia e “copiar segunda → semana”) e bloqueia datas pontuais quando precisar. O sistema só oferece ao cliente <span class="em">horário que realmente existe</span>.',
+  pills:['Faixas por dia da semana','Copiar horários em 1 clique','Bloqueios pontuais com motivo','Zero conflito de agenda'],
+  mock: appShell(PRO_NAV,'Agenda',`
+    <div class="card" style="margin-bottom:10px"><div class="h">Horários da semana <span class="tag">copiar seg → sex</span></div>
+      <div class="rows">
+        <div class="r" style="grid-template-columns:.8fr 1fr 1fr"><b>Seg–Sex</b><span>08:00–12:00</span><span>14:00–18:00</span></div>
+        <div class="r" style="grid-template-columns:.8fr 1fr 1fr"><b>Sábado</b><span>08:00–12:00</span><span style="color:var(--mut2)">—</span></div>
+      </div>
+    </div>
+    <div class="card"><div class="h">Bloqueios</div>
+      <div style="font-size:11px">🏖️ 15/07 — folga <span class="st no" style="float:right">bloqueado</span></div>
+    </div>`)});
+
+S({level:'pro', n:'Pedidos & clientes', title:['Quem vem, quando vem, ','quanto paga'],
+  kid:'A central de pedidos mostra as <b>próximas reservas com tudo</b>: cliente, contato, serviço, horário e valor — já pagos e protegidos. O profissional sai de casa <span class="em">sabendo que o dinheiro está garantido</span>.',
+  pills:['Reservas pagas antecipadamente','Dados e contato do cliente','Chat integrado','Histórico por cliente'],
+  mock: appShell(PRO_NAV,'Pedidos',`
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="kpi hi"><div class="l">Esta semana</div><div class="v">7</div><div class="dl">R$ 2.140 garantidos</div></div>
+      <div class="kpi"><div class="l">Taxa de retorno</div><div class="v">42%</div></div>
+    </div>
+    <div class="list">
+      <div class="li"><div class="av">MC</div><div class="g"><b>Maria Costa</b><small>Instalação elétrica · ter 10:30 · R$ 360</small></div><span class="st ok">pago ✓</span></div>
+      <div class="li"><div class="av">JS</div><div class="g"><b>João Souza</b><small>Troca de quadro · qua 14:00 · R$ 450</small></div><span class="st ok">pago ✓</span></div>
+      <div class="li"><div class="av">AL</div><div class="g"><b>Ana Lima</b><small>Projeto · sex 09:00 · R$ 270</small></div><span class="st ok">pago ✓</span></div>
+    </div>`)});
+
+S({level:'pro', n:'Financeiro & saque', title:['Trabalhou, ','o saldo aparece'],
+  kid:'Três números sempre à vista: <b>disponível pra saque, em retenção e total ganho</b>. Serviço concluído vira saldo; saque via <b>PIX a partir de R$ 20</b>, com botão “sacar tudo”. Sem boleto, sem espera de 30 dias, <span class="em">sem calote</span>.',
+  pills:['Saldo em tempo real','Saque PIX (mín. R$ 20)','Histórico de cada serviço','Comprovante anexado no saque'],
+  mock: appShell(PRO_NAV,'Financeiro',`
+    <div class="grid3" style="margin-bottom:10px">
+      <div class="kpi hi"><div class="l">Disponível</div><div class="v">R$ 1.847</div></div>
+      <div class="kpi"><div class="l">Em retenção</div><div class="v">R$ 630</div></div>
+      <div class="kpi"><div class="l">Total ganho</div><div class="v">R$ 14,2k</div></div>
+    </div>
+    <div class="rows">
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>Saque #12</b><span>R$ 1.500</span><span class="st ok">pago</span></div>
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>Instalação · Maria C.</b><span>+ R$ 288</span><span class="st ok">liberado</span></div>
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>Logo · Tech Co.</b><span>+ R$ 640</span><span class="st wa">retenção 48h</span></div>
+    </div>
+    <div style="margin-top:10px;text-align:center"><span style="display:inline-block;background:linear-gradient(135deg,var(--z-vivid),var(--z-deep));color:#fff;font-family:var(--disp);font-weight:800;font-size:12px;border-radius:99px;padding:9px 22px">💸 Sacar tudo via PIX</span></div>`)});
+
+S({level:'pro', n:'Google Calendar & iCal', title:['Sua agenda Zello ','dentro do seu calendário'],
+  kid:'Conectou o <b>Google Calendar</b>, cada reserva paga vira evento sozinha. Prefere Apple ou Outlook? Tem <b>feed iCal</b> assinável. O profissional vive no calendário que já usa — <span class="em">a Zello se adapta, não atrapalha</span>.',
+  pills:['Evento automático no Google','Feed iCal (Apple/Outlook)','Sincroniza ao confirmar pagamento','Desconecta quando quiser'],
+  mock:`<div class="browser"><div class="top"><i></i><i></i><i></i><div class="url">calendar.google.com/<b>agenda</b></div></div>
+    <div class="body">
+      <div class="rows">
+        <div class="r hd" style="grid-template-columns:.6fr 2fr"><span>Ter</span><span>15 de julho</span></div>
+        <div class="r" style="grid-template-columns:.6fr 2fr"><b>10:30</b><span style="border-left:3px solid var(--z);padding-left:8px">⚡ Zello · Instalação elétrica — Maria Costa</span></div>
+        <div class="r" style="grid-template-columns:.6fr 2fr"><b>14:00</b><span style="border-left:3px solid var(--z);padding-left:8px">⚡ Zello · Visita técnica — João Souza</span></div>
+        <div class="r" style="grid-template-columns:.6fr 2fr"><b>19:00</b><span style="border-left:3px solid var(--mut2);padding-left:8px;color:var(--mut)">Futebol ⚽ (pessoal)</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:10.5px;color:var(--grn)">✓ sincronizado automaticamente pela Zello</div>
+    </div></div>`});
+
+S({level:'pro', n:'Reputação que vende', title:['Cada estrela é ','marketing grátis'],
+  kid:'Avaliação boa sobe o profissional na busca, enche o perfil de prova social e <b>puxa o próximo cliente</b>. É o ciclo do marketplace: trabalho bem feito → nota alta → mais visibilidade → <span class="em">mais trabalho</span>.',
+  pills:['Média pública no perfil','Ordena a busca','Notificação a cada avaliação','Prova social que converte'],
+  mock: phone(`
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="font-family:var(--disp);font-weight:800;font-size:34px;color:var(--amber)">4,9 <span style="font-size:16px">★</span></div>
+      <div style="font-size:10px;color:var(--mut)">87 avaliações · top 5% da categoria</div>
+    </div>
+    <div class="card" style="margin-bottom:8px"><div class="h">Maria C. <span class="stars">★★★★★</span></div><div style="font-size:10.5px;color:#dde3f0">“Pontual, organizado e resolveu rápido. Contrato de novo!”</div></div>
+    <div class="card" style="margin-bottom:8px"><div class="h">João S. <span class="stars">★★★★★</span></div><div style="font-size:10.5px;color:#dde3f0">“Melhor eletricista que já contratei pela plataforma.”</div></div>
+    <div class="kpi hi"><div class="l">Efeito na busca</div><div class="v">+3 posições</div><div class="dl">este mês</div></div>`, false)});
+
+/* ========================= 03 ADMIN (versão completa) ========================= */
+if(SHOW_ADMIN){
+
+S({type:'intro', level:'admin', no:'03', who:'O controle do negócio', title:'Administração',
+  desc:'O painel de quem opera a Zello: GMV e comissão em tempo real, verificação de profissionais, fila de saques, arbitragem de disputas e visão 360º de cada usuário — com liberação de escrow automática rodando em rotina.',
+  idx:['Dashboard & métricas','Verificação KYC','Fila de saques','Disputas & arbitragem','Usuários 360º','Categorias & curadoria']});
+
+S({level:'admin', n:'Dashboard & métricas', title:['GMV, comissão e tendência ','numa tela'],
+  kid:'Quatro números com variação semanal — <b>GMV, reservas concluídas, profissionais ativos e comissão da casa</b> — mais o gráfico de reservas de 30 dias e o ranking de categorias. O pulso do marketplace, <span class="em">sem abrir planilha</span>.',
+  pills:['GMV com delta semanal','Comissão (20%) em destaque','Gráfico de 30 dias','Top categorias'],
+  mock: appShell(ADMIN_NAV,'Dashboard',`
+    <div class="grid4" style="margin-bottom:12px">
+      <div class="kpi hi"><div class="l">GMV (mês)</div><div class="v">R$ 84k</div><div class="dl">▲ 18%</div></div>
+      <div class="kpi"><div class="l">Comissão</div><div class="v">R$ 16,8k</div><div class="dl">▲ 18%</div></div>
+      <div class="kpi"><div class="l">Concluídas</div><div class="v">312</div></div>
+      <div class="kpi"><div class="l">Pros ativos</div><div class="v">148</div><div class="dl">▲ 11</div></div>
+    </div>
+    <div class="card"><div class="h">Reservas por dia <span class="tag">últimos 30 dias</span></div>
+      <div class="bars">${[30,42,38,52,48,66,80,58,72,88,64,94].map(h=>`<div class="b" style="height:${h}%"></div>`).join('')}</div>
+      <div class="line-lbls"><span>sem 1</span><span>sem 2</span><span>sem 3</span><span>sem 4</span></div>
+    </div>`)});
+
+S({level:'admin', n:'Verificação KYC', title:['O selo ✓ passa ','por aqui'],
+  kid:'Todo profissional envia <b>CPF/CNPJ e documento com foto</b>. O admin abre, confere e aprova (ou rejeita com motivo) — e o email sai sozinho. É o filtro que faz o cliente <span class="em">confiar em quem entra na casa dele</span>.',
+  pills:['Documentos no painel','Aprovar / rejeitar com motivo','Email automático','Fila com pendências em destaque'],
+  mock: appShell(ADMIN_NAV,'KYC',`
+    <div class="li" style="margin-bottom:10px"><div class="av">RF</div><div class="g"><b>Rafael Ferreira</b><small>Encanador · Curitiba/PR · enviado há 3h</small></div><span class="st wa">pendente</span></div>
+    <div class="grid2" style="margin-bottom:10px">
+      ${['CPF + Selfie','CNPJ MEI'].map(d=>`<div class="card" style="text-align:center;padding:18px 10px"><div style="font-size:22px;margin-bottom:6px">📄</div><div style="font-size:10.5px;color:var(--mut)">${d}</div></div>`).join('')}
+    </div>
+    <div class="grid2">
+      <span class="st ok" style="text-align:center;justify-self:stretch;padding:9px;font-weight:800">APROVAR ✓</span>
+      <span class="st no" style="text-align:center;justify-self:stretch;padding:9px">rejeitar com motivo</span>
+    </div>`)});
+
+S({level:'admin', n:'Fila de saques', title:['Pagar o profissional ','é um clique'],
+  kid:'Os pedidos de saque chegam numa fila: o admin faz o PIX, <b>anexa o comprovante</b> e aprova — ou rejeita devolvendo o valor ao saldo. Tudo com email automático e rastro completo. <span class="em">Confiança se constrói pagando em dia</span>.',
+  pills:['Fila com valores e chave PIX','Comprovante anexado','Rejeição devolve o saldo','Email automático nas duas pontas'],
+  mock: appShell(ADMIN_NAV,'Saques',`
+    <div class="rows">
+      <div class="r hd"><span>Profissional</span><span>Valor</span><span>Chave PIX</span><span>Ação</span></div>
+      <div class="r"><b>Pedro Almeida</b><span>R$ 1.500</span><span style="color:var(--mut)">***@email</span><span class="st bl">pagar</span></div>
+      <div class="r"><b>Camila Santos</b><span>R$ 2.240</span><span style="color:var(--mut)">CPF ***</span><span class="st bl">pagar</span></div>
+      <div class="r"><b>Joana Silva</b><span>R$ 380</span><span style="color:var(--mut)">celular</span><span class="st ok">pago ✓</span></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="kpi"><div class="l">Na fila</div><div class="v">R$ 3.740</div></div>
+      <div class="kpi hi"><div class="l">Pago (mês)</div><div class="v">R$ 41,2k</div></div>
+    </div>`)});
+
+S({level:'admin', n:'Disputas & arbitragem', title:['Deu ruim? ','A casa resolve'],
+  kid:'Cliente abriu disputa? O caso chega com <b>tudo: conversa, valores, histórico dos dois lados</b>. O admin decide — <b>reembolsa o cliente ou libera pro profissional</b> — e o sistema executa: ajusta escrow, saldo e notifica os dois. Justiça <span class="em">com processo, não com achismo</span>.',
+  pills:['Contexto completo do caso','Chat como evidência','Reembolsar ou liberar','Execução automática da decisão'],
+  mock: appShell(ADMIN_NAV,'Disputas',`
+    <div class="card" style="margin-bottom:10px;border-color:rgba(251,113,133,.35)"><div class="h">⚠️ Disputa #31 <span class="tag" style="color:var(--red);background:rgba(251,113,133,.12)">aberta há 6h</span></div>
+      <div style="font-size:11px;line-height:1.7">Maria C. ↔ <b>Pedro A.</b> · Instalação elétrica · <b>R$ 360</b><br/><span style="color:var(--mut)">“serviço ficou incompleto, tomada da sala sem funcionar”</span></div>
+      <div class="grid2" style="margin-top:10px">
+        <span class="st no" style="text-align:center;justify-self:stretch;padding:8px;font-weight:800">REEMBOLSAR cliente</span>
+        <span class="st ok" style="text-align:center;justify-self:stretch;padding:8px;font-weight:800">LIBERAR pro profissional</span>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--mut)">taxa de disputa da plataforma: <b style="color:var(--grn)">1,4%</b> das reservas</div>`)});
+
+S({level:'admin', n:'Usuários 360º', title:['Cada conta, ','de ponta a ponta'],
+  kid:'Busca por nome, email ou CPF e abre a <b>visão 360º</b>: perfil, documentos, reservas como cliente, vendas como profissional, saques, disputas, avaliações. Com ações rápidas: <span class="em">WhatsApp, notificar, editar, desativar</span>.',
+  pills:['Busca por nome/email/CPF','Timeline completa','Ações inline (WhatsApp, editar…)','Auditoria de eventos'],
+  mock: appShell(ADMIN_NAV,'Usuários',`
+    <div class="li" style="margin-bottom:10px"><div class="av" style="width:38px;height:38px;font-size:13px">PA</div><div class="g"><b>Pedro Almeida ✓</b><small>profissional · BH/MG · desde mai/26</small></div><span class="st ok">ativo</span></div>
+    <div class="grid4" style="margin-bottom:10px">
+      <div class="kpi"><div class="l">Vendas</div><div class="v">142</div></div>
+      <div class="kpi hi"><div class="l">Faturou</div><div class="v">R$ 38k</div></div>
+      <div class="kpi"><div class="l">Nota</div><div class="v">4,9</div></div>
+      <div class="kpi"><div class="l">Disputas</div><div class="v">1</div></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span class="st bl">💬 WhatsApp</span><span class="st bl">🔔 notificar</span><span class="st bl">✏️ editar</span><span class="st no">desativar</span>
+    </div>`)});
+
+S({level:'admin', n:'Categorias & curadoria', title:['O catálogo cresce ','sem virar bagunça'],
+  kid:'Profissional pode <b>sugerir categoria nova</b> na hora do cadastro — ela nasce invisível e o admin consolida: aprova, renomeia ou funde com uma existente. O marketplace cresce orgânico, <span class="em">mas o catálogo continua limpo</span>.',
+  pills:['Sugestão livre do profissional','Aprovação e normalização','CRUD completo','Proteção contra exclusão com serviços'],
+  mock: appShell(ADMIN_NAV,'Categorias',`
+    <div class="rows">
+      <div class="r hd" style="grid-template-columns:1.6fr 1fr .8fr"><span>Categoria</span><span>Profissionais</span><span>Status</span></div>
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>⚡ Reformas & Elétrica</b><span>34</span><span class="st ok">ativa</span></div>
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>⚖️ Advocacia</b><span>21</span><span class="st ok">ativa</span></div>
+      <div class="r" style="grid-template-columns:1.6fr 1fr .8fr"><b>🐕 Adestramento</b><span>1 · sugerida</span><span class="st wa">aprovar?</span></div>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--mut)">sugerida por <b>carlos.trainer@…</b> no cadastro — aprovar, renomear ou fundir</div>`)});
+
+/* ===== MODELO DE RECEITA (só completa) ===== */
+S({type:'revenue'});
+
+}
+
+/* ========================= FECHAMENTO ========================= */
+S({type:'end'});
+
+/* ============================================================= */
+/* RENDER                                                         */
+/* ============================================================= */
+const deck = document.getElementById('deck');
+let secOrder = [];
+function levelName(id){return (LEVELS.find(l=>l.id===id)||{}).label||''}
+
+SLIDES.forEach((s,i)=>{
+  const el = document.createElement('section');
+  el.className='slide';
+  let lvl = s.level || (['cover','value','levelmap'].includes(s.type)?'intro':(s.type==='end'?'fim':(s.type==='revenue'?'admin':s.level)));
+  el.dataset.level = lvl;
+  el.dataset.i = i;
+  secOrder.push(lvl);
+
+  if(s.type==='cover'){
+    el.id='cover';
+    el.innerHTML=`<div class="glow a"></div><div class="glow b"></div>
+      <div style="position:relative;z-index:3">
+        <div class="wordmark"><span class="zm">Z</span>Zello <b>Conecta</b></div>
+        <div class="kick">Marketplace de serviços profissionais</div>
+        <h1 class="big">Quem precisa encontra.<br/><span class="l">Quem faz, recebe garantido.</span></h1>
+        <div class="sub">O marketplace que conecta clientes a profissionais verificados — com agenda real, pagamento protegido em custódia e avaliação de verdade. Do primeiro clique ao PIX na conta do profissional.</div>
+      </div>
+      <div class="meta">
+        <span>Apresentação da plataforma · 2026</span>
+        <span>Navegue <kbd>←</kbd> <kbd>→</kbd> · <kbd>F</kbd> tela cheia</span>
+      </div>`;
+  }
+  else if(s.type==='value'){
+    el.innerHTML=`<div class="glow a"></div>
+      <div style="position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto">
+        <div class="kick">Por que a Zello</div>
+        <h2 class="sec">Contratar serviço no Brasil é na base da fé.<br/>A Zello troca fé por <span style="color:var(--z-soft)">garantia</span>.</h2>
+        <p class="lead">De um lado, o medo do calote e do serviço mal feito. Do outro, o profissional que trabalha e não recebe. A Zello fica no meio — <b style="color:var(--tx)">segurando o dinheiro até os dois lados ficarem bem</b>.</p>
+        <div class="vg">
+          <div class="v"><div class="ic">🛡️</div><h3>Pra quem contrata</h3><p>Profissional verificado com documento, avaliações reais, hora marcada e o pagamento protegido até o serviço ser entregue. Deu problema? Disputa com arbitragem.</p></div>
+          <div class="v"><div class="ic">💼</div><h3>Pra quem trabalha</h3><p>Vitrine profissional, agenda que se cuida sozinha e o fim do calote: todo serviço já está pago antes de começar. Concluiu, o saldo aparece.</p></div>
+          <div class="v"><div class="ic">🏦</div><h3>Pra plataforma</h3><p>20% de cada serviço concluído, cobrados na fonte — o dinheiro passa pela custódia da Zello. Sem inadimplência: a comissão nunca vira boleto.</p></div>
+        </div>
+      </div>`;
+  }
+  else if(s.type==='levelmap'){
+    const cards=[['01','Cliente','Busca, agenda e paga protegido'],['02','Profissional','Vende, atende e recebe garantido']];
+    if(SHOW_ADMIN)cards.push(['03','Administração','Opera, verifica e arbitra']);
+    el.innerHTML=`<div class="glow b"></div>
+      <div style="position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto">
+        <div class="kick">Um sistema, três acessos</div>
+        <h2 class="sec">Cada pessoa entra no <span style="color:var(--z-soft)">seu</span> painel.</h2>
+        <p class="lead">Experiências separadas na mesma base: o cliente nem vê painel (navega aberto e só loga pra fechar), o profissional tem o escritório dele, e a administração enxerga tudo.</p>
+        <div class="vg" style="grid-template-columns:repeat(${cards.length},1fr);gap:14px;margin-top:34px">
+          ${cards.map(([n,t,d])=>`<div class="v" style="padding:22px"><div style="font-family:var(--disp);font-weight:800;font-size:28px;color:var(--z-soft)">${n}</div><h3 style="font-size:17px;margin:8px 0 4px">${t}</h3><p style="font-size:13px">${d}</p></div>`).join('')}
+        </div>
+        <p class="overline">Nos próximos slides, cada nível — módulo por módulo.</p>
+      </div>`;
+  }
+  else if(s.type==='intro'){
+    el.innerHTML=`<div class="glow a"></div>
+      <div class="levelintro">
+        <div style="display:flex;align-items:baseline;gap:24px;flex-wrap:wrap">
+          <div class="no">${s.no}</div>
+          <div><span class="who">${s.who}</span><h2>${s.title}</h2></div>
+        </div>
+        <p class="lead" style="max-width:70ch">${s.desc}</p>
+        <div class="idx">${s.idx.map(x=>`<span><b>›</b>${x}</span>`).join('')}</div>
+      </div>`;
+  }
+  else if(s.type==='revenue'){
+    el.innerHTML=`<div class="glow a"></div><div class="glow b"></div>
+      <div style="position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto">
+        <div class="kick">O modelo de negócio</div>
+        <h2 class="sec">Take rate de 20%, <span style="color:var(--z-soft)">cobrado na fonte</span>.</h2>
+        <p class="lead">O dinheiro de toda transação passa pela custódia da Zello — a comissão é retida antes do repasse. Sem cobrança, sem inadimplência da comissão, sem discussão.</p>
+        <div class="revgrid">
+          <div class="rev"><div class="ic">🏦</div><h4>Comissão de 20%</h4><p>Serviço de R$ 360 → <b>R$ 72 pra plataforma</b>, R$ 288 pro profissional. Retido automaticamente no escrow.</p></div>
+          <div class="rev"><div class="ic">⏳</div><h4>Float da custódia</h4><p>O valor fica na conta da plataforma entre o pagamento e a liberação (conclusão ou 48h) — caixa que trabalha.</p></div>
+          <div class="rev"><div class="ic">📈</div><h4>GMV composto</h4><p>Cada profissional novo traz o próprio público; cada avaliação melhora a conversão da busca. O marketplace se alimenta.</p></div>
+          <div class="rev"><div class="ic">⭐</div><h4>Destaque pago <small style="color:var(--mut2)">(roadmap)</small></h4><p>Profissional paga pra aparecer no topo da categoria/cidade — mídia de alta intenção.</p></div>
+          <div class="rev"><div class="ic">💎</div><h4>Assinatura Pro <small style="color:var(--mut2)">(roadmap)</small></h4><p>Plano mensal com taxa reduzida, selo destaque e ferramentas extras pros que mais vendem.</p></div>
+          <div class="rev"><div class="ic">🏢</div><h4>Contas corporativas <small style="color:var(--mut2)">(roadmap)</small></h4><p>Empresas contratando serviços recorrentes (manutenção, jurídico, design) com faturamento mensal.</p></div>
+        </div>
+      </div>`;
+  }
+  else if(s.type==='end'){
+    el.id='end';
+    el.innerHTML=`<div class="glow a"></div><div class="glow b"></div>
+      <div style="position:relative;z-index:3">
+        <div class="wordmark"><span class="zm">Z</span>Zello <b>Conecta</b></div>
+        <div class="kick">Vamos conectar sua cidade?</div>
+        <h2 class="big" style="font-size:clamp(34px,4.6vw,64px)">O jeito seguro de contratar <span class="l">e de trabalhar</span>.</h2>
+        <p class="lead" style="margin:14px auto 0;text-align:center;max-width:60ch">Plataforma completa: busca, agenda, custódia, disputas, financeiro e apps a caminho das lojas. Profissionais entram grátis — a casa só ganha quando eles ganham.</p>
+        <div class="cta">Falar com a Zello →</div>
+        <div class="contact"><b>zello-conecta.vercel.app</b> · contato@<b>zelloconecta.com.br</b></div>
+      </div>`;
+  }
+  else{
+    el.innerHTML=`<div class="glow a"></div><div class="glow b"></div>
+      <div class="feat">
+        <div class="txt">
+          <div class="num">${String(i).padStart(2,'0')} · ${levelName(lvl)}</div>
+          <div class="kick" style="margin-top:10px">${s.n}</div>
+          <h2>${s.title.map((t,k)=>k%2?`<span class="hl">${t}</span>`:t).join('')}</h2>
+          <p class="kid">${s.kid}</p>
+          <div class="pills">${(s.pills||[]).map((p,k)=>`<span class="pill ${k===0?'blue':''}">${p}</span>`).join('')}</div>
+        </div>
+        <div class="mockwrap">${s.mock}</div>
+      </div>`;
+  }
+  deck.appendChild(el);
+});
+
+const railEl=document.getElementById('rail');
+const firstOf={};
+secOrder.forEach((lvl,i)=>{if(firstOf[lvl]===undefined)firstOf[lvl]=i});
+LEVELS.forEach(l=>{
+  if(firstOf[l.id]===undefined)return;
+  const a=document.createElement('a');
+  a.href='#';a.dataset.lvl=l.id;
+  a.innerHTML=`<span class="d"></span><span class="t">${l.label}</span>`;
+  a.onclick=(e)=>{e.preventDefault();goTo(firstOf[l.id])};
+  railEl.appendChild(a);
+});
+
+const slides=[...document.querySelectorAll('.slide')];
+document.getElementById('tot').textContent=String(slides.length).padStart(2,'0');
+let idx=0;
+function goTo(i){idx=Math.max(0,Math.min(slides.length-1,i));slides[idx].scrollIntoView()}
+function next(){goTo(idx+1)} function prev(){goTo(idx-1)}
+
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){
+    idx=+e.target.dataset.i;
+    document.getElementById('cur').textContent=String(idx+1).padStart(2,'0');
+    document.getElementById('bar').firstElementChild.style.width=((idx)/(slides.length-1)*100)+'%';
+    const lvl=e.target.dataset.level;
+    [...railEl.children].forEach(a=>a.classList.toggle('on',a.dataset.lvl===lvl));
+  }});
+},{threshold:.55});
+slides.forEach(s=>io.observe(s));
+
+addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}
+  if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev()}
+  if(e.key==='Home')goTo(0);if(e.key==='End')goTo(slides.length-1);
+  if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen()}
+});
+</script>
+</body>
+</html>
