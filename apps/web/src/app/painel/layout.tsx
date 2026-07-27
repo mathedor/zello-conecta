@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
+import { touchLastSeen } from '@/lib/last-seen';
 import {
   PanelLayout,
   PanelSidebar,
@@ -10,6 +11,7 @@ import {
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect('/entrar?next=/painel');
+  touchLastSeen(session.user.id);
 
   const [unreadMsgs, unreadNotif] = await Promise.all([
     prisma.conversation.aggregate({

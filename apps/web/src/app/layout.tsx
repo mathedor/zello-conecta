@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { AnaBeacon } from '@/components/layout/ana-beacon';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { BottomNav } from '@/components/layout/bottom-nav';
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ChatFab />
           <Toaster position="top-center" richColors closeButton />
           <TableCards />
+          <AnaBeacon />
         </Providers>
       </body>
     </html>

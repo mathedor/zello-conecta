@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
+import { touchLastSeen } from '@/lib/last-seen';
 import {
   PanelLayout,
   PanelSidebar,
@@ -11,6 +12,7 @@ export default async function PainelProLayout({ children }: { children: React.Re
   const session = await auth();
   if (!session?.user) redirect('/entrar?next=/painel-pro');
   if (session.user.role !== 'PROFESSIONAL' && session.user.role !== 'ADMIN') redirect('/painel');
+  touchLastSeen(session.user.id);
 
   const professional = await prisma.professional.findUnique({
     where: { userId: session.user.id },

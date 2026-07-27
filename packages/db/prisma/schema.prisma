@@ -45,6 +45,7 @@ model User {
   avatarUrl     String?
   role          Role       @default(CLIENT)
   status        UserStatus @default(ACTIVE)
+  lastSeenAt    DateTime?
 
   // Documentos
   cpf       String? @unique
@@ -81,6 +82,7 @@ model User {
 
   @@index([role, status])
   @@index([email])
+  @@index([lastSeenAt])
 }
 
 // Auth.js tables

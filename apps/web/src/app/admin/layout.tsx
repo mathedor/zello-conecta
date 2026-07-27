@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@zello/db';
 import { auth } from '@/lib/auth';
+import { touchLastSeen } from '@/lib/last-seen';
 import {
   PanelLayout,
   PanelSidebar,
@@ -10,6 +11,7 @@ import {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user || session.user.role !== 'ADMIN') redirect('/painel');
+  touchLastSeen(session.user.id);
 
   const [kycPending, withdrawPending, disputes, unreadNotif] = await Promise.all([
     prisma.user.count({ where: { kycStatus: 'SUBMITTED' } }),
