@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Em manutenção — Zello Conecta</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(1200px 600px at 50% -10%, #16225c 0%, #0a1238 55%, #060b26 100%);
+    color: #e8edff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    text-align: center;
+    padding: 24px;
+  }
+  .card { max-width: 560px; }
+  .icone {
+    font-size: 72px;
+    line-height: 1;
+    display: inline-block;
+    margin-bottom: 28px;
+    filter: drop-shadow(0 8px 24px rgba(90, 130, 255, 0.35));
+    animation: flutua 3s ease-in-out infinite;
+  }
+  @keyframes flutua {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #ffffff;
+  }
+  .sistema {
+    margin-top: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #8eaeff;
+    letter-spacing: 0.02em;
+  }
+  .linha {
+    width: 64px;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5a82ff, #8eaeff);
+    margin: 26px auto;
+  }
+  p.texto {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #b9c5ec;
+  }
+  footer {
+    margin-top: 56px;
+    font-size: 0.8rem;
+    color: #5c689a;
+  }
+  footer a { color: #7d8bc4; text-decoration: none; }
+  footer a:hover { color: #8eaeff; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="icone">🔧</span>
+    <h1>EM MANUTENÇÃO</h1>
+    <div class="sistema">Zello Conecta</div>
+    <div class="linha"></div>
+    <p class="texto">Estamos fazendo uma melhoria rápida.<br />Já já estamos de volta.</p>
+    <footer>Diretório Web · <a href="https://diretoriow.com.br">diretoriow.com.br</a></footer>
+  </div>
+</body>
+</html>
