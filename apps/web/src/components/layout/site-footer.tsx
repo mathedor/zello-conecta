@@ -99,6 +99,17 @@ export function SiteFooter() {
             Em breve nas lojas <span className="font-medium">iOS</span> e{' '}
             <span className="font-medium">Android</span>.
           </p>
+          <p className="text-xs text-muted-foreground">
+            Desenvolvido por:{' '}
+            <a
+              href="https://diretoriow.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-foreground"
+            >
+              Diretório Web
+            </a>
+          </p>
         </div>
       </div>
     </footer>
