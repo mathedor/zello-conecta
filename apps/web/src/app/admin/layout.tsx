@@ -52,6 +52,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       title: 'Plataforma',
       items: [
         { href: '/admin/categorias', label: 'Categorias', iconName: 'LayoutGrid' },
+        { href: '/admin/custos', label: 'Custos & Desenvolvimento', iconName: 'Banknote' },
         { href: '/mensagens', label: 'Mensagens', iconName: 'MessageCircle' },
         {
           href: '/notificacoes',
