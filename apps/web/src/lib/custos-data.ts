@@ -76,6 +76,13 @@ export const MONTHLY_ITEMS: MonthlyItem[] = [
     note: 'E-mails de boas-vindas, KYC, pagamento, saque e avaliação.',
   },
   {
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    value: 99,
+    estimated: true,
+    note: 'Canal oficial de WhatsApp para avisos e atendimento.',
+  },
+  {
     id: 'firewall',
     label: 'Firewall',
     value: 125.35,
