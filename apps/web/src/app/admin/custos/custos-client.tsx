@@ -19,7 +19,6 @@ import {
   API_ITEMS,
   DEV_MONTHS,
   DEV_TOTAL,
-  MONTHLY_ITEMS,
   SETUP,
   STORAGE_KEY,
   TIERS,
@@ -200,7 +199,8 @@ function Section({
  * Página
  * ------------------------------------------------------------------ */
 
-export function CustosClient({ currentMonth }: { currentMonth: string }) {
+/* `items` chega do servidor já com o preço que a Ana leu na fatura deste mês. */
+export function CustosClient({ currentMonth, items }: { currentMonth: string; items: MonthlyItem[] }) {
   const [state, setState] = useState<CustosState>(EMPTY);
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -241,7 +241,7 @@ export function CustosClient({ currentMonth }: { currentMonth: string }) {
 
   const monthRows = useCallback(
     (ym: string) => {
-      const base = MONTHLY_ITEMS.map((i) => ({
+      const base = items.map((i) => ({
         id: i.id,
         label: i.label,
         value: itemValue(i),
