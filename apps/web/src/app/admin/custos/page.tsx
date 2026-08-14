@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
-import { contasDaAna, comValorDaAna } from '@/lib/custosAna';
+import { contasDaAna, comValorDaAna, pagamentosDaAna } from '@/lib/custosAna';
+import PagamentosAna from './PagamentosAna';
+import { marcarPagamentoNaAna } from './acoes-ana';
 import { MONTHLY_ITEMS } from '@/lib/custos-data';
 import { CustosClient } from './custos-client';
 
@@ -11,6 +13,8 @@ export const dynamic = 'force-dynamic';
 export default async function CustosPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== 'ADMIN') redirect('/painel');
+
+  const pagamentosNaAna = await pagamentosDaAna('zello');
 
   // Mês corrente calculado no servidor (fuso de Brasília) para não haver
   // divergência entre o HTML gerado e o que o navegador renderiza.
@@ -31,6 +35,7 @@ export default async function CustosPage() {
       title="Custos & Desenvolvimento"
       description="Quanto a Zello Conecta custou para existir, quanto custa por mês para ficar no ar e tudo que foi entregue desde a primeira versão."
     >
+      <PagamentosAna inicial={pagamentosNaAna} marcar={marcarPagamentoNaAna} />
       <CustosClient currentMonth={currentMonth} items={items} />
     </DashboardShell>
   );

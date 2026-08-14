@@ -97,3 +97,52 @@ export function comValorDaAna<T extends ContaLocal>(locais: T[], daAna: ContaAna
     return r ? { ...c, valor: r.valor, obs: r.obs, estimado: r.estimado } : c;
   });
 }
+
+/* ══ O ✓ DE PAGO TAMBÉM É DA ANA ══
+   O checkbox de "paguei" vivia no localStorage: valia só naquele navegador e a
+   Ana nunca ficava sabendo — ela seguia cobrando o que já tinha sido pago.
+   Agora o estado é a conta dela: marcar aqui dá baixa lá, baixa dada lá acende
+   o ✓ aqui. Um número só, nos dois lados. */
+
+export type EstadoMes = { pago: boolean; pago_em: string | null; centavos: number; vencimento: string };
+export type PagamentosAna = { custos: Record<string, EstadoMes>; dev: Record<string, EstadoMes> };
+
+const SEM_ANA: PagamentosAna = { custos: {}, dev: {} };
+
+export async function pagamentosDaAna(projeto: string): Promise<PagamentosAna> {
+  const token = process.env.ANA_CUSTOS_TOKEN;
+  if (!token) return SEM_ANA;
+  try {
+    const r = await fetch(`${ANA}/api/custos-pagamentos?projeto=${encodeURIComponent(projeto)}&t=${token}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return SEM_ANA;
+    const d = await r.json();
+    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {} } : SEM_ANA;
+  } catch {
+    return SEM_ANA;   // Ana fora do ar não pode derrubar o relatório
+  }
+}
+
+/** Dá (ou tira) a baixa do mês na Ana. Devolve o estado novo, ou null se não deu. */
+export async function marcarNaAna(
+  projeto: string, tipo: "custos" | "dev", mes: string, pago: boolean,
+): Promise<PagamentosAna | null> {
+  const token = process.env.ANA_CUSTOS_TOKEN;
+  if (!token) return null;
+  try {
+    const r = await fetch(`${ANA}/api/custos-pagamentos`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projeto, tipo, mes, pago, t: token }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {} } : null;
+  } catch {
+    return null;
+  }
+}
