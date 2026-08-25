@@ -120,6 +120,18 @@ export const TIERS: Record<TierKey, { tokens: number; value: number; label: stri
   X: { tokens: 16.5, value: 599.5, label: 'Megasprint' },
 };
 
+/* House margin (owner's rule, 2026-08-25): development remuneration gains 20%
+   starting with the SEPTEMBER/2026 competence month ("YYYY-MM") — closed months
+   stay exactly as they were. The tier table above stays at the base rate: Ana
+   (the central aggregator) reads this file raw and applies the same margin on
+   her side — the margin here is for local display/calculation only. */
+export const DEV_MARGIN = 1.2;
+export const MARGIN_SINCE = '2026-09';
+export function tierPrice(ym: string, tier: TierKey): number {
+  const c = TIERS[tier].value;
+  return ym >= MARGIN_SINCE ? Math.round(c * DEV_MARGIN) : c;
+}
+
 export interface DevEntry {
   /** dia/mês, ex.: "06/05" */
   date: string;
@@ -435,7 +447,8 @@ export function monthsUntil(current: string, from = FIRST_MONTH): string[] {
 export function devMonthTotal(month: DevMonth) {
   return month.entries.reduce(
     (acc, e) => {
-      acc.value += TIERS[e.tier].value;
+      // delivery price always goes through tierPrice (house margin by competence month)
+      acc.value += tierPrice(month.ym, e.tier);
       acc.tokens += TIERS[e.tier].tokens;
       return acc;
     },

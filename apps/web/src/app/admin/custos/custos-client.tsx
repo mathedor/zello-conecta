@@ -27,6 +27,7 @@ import {
   formatTokens,
   monthLabel,
   monthsUntil,
+  tierPrice,
   type MonthlyItem,
 } from '@/lib/custos-data';
 import { Button } from '@/components/ui/button';
@@ -275,7 +276,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
   const currentDevTotal = currentDevMonth ? devMonthTotal(currentDevMonth).value : 0;
   const currentDevPaid = currentDevMonth
     ? currentDevMonth.entries.reduce(
-        (s, e, i) => s + (state.paidDev[`${currentDevMonth.key}:${i}`] ? TIERS[e.tier].value : 0),
+        (s, e, i) => s + (state.paidDev[`${currentDevMonth.key}:${i}`] ? tierPrice(currentDevMonth.ym, e.tier) : 0),
         0,
       )
     : 0;
@@ -552,7 +553,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
               {DEV_MONTHS.map((m) => {
                 const t = devMonthTotal(m);
                 const paidValue = m.entries.reduce(
-                  (s, e, i) => s + (state.paidDev[`${m.key}:${i}`] ? TIERS[e.tier].value : 0),
+                  (s, e, i) => s + (state.paidDev[`${m.key}:${i}`] ? tierPrice(m.ym, e.tier) : 0),
                   0,
                 );
                 const pct = t.value ? (paidValue / t.value) * 100 : 0;
@@ -610,7 +611,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                                 </span>
                                 <span className="shrink-0 text-right">
                                   <span className="block text-sm font-semibold tabular-nums">
-                                    {formatBRL(TIERS[e.tier].value)}
+                                    {formatBRL(tierPrice(m.ym, e.tier))}
                                   </span>
                                   <span className="block text-[11px] text-muted-foreground">
                                     {formatTokens(TIERS[e.tier].tokens)}
