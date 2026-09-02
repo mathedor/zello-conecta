@@ -156,6 +156,13 @@ export const DEV_MONTHS: DevMonth[] = [
     label: 'Agosto / 2026',
     entries: [
       {
+        date: '19/08',
+        title: 'Assistente consulta a plataforma ao vivo',
+        description:
+          'A Ana passou a responder perguntas sobre a Zello com dados reais — disputas abertas, cadastros, agenda — sem ninguém precisar abrir tela pra conferir.',
+        tier: 'M',
+      },
+      {
         date: '04/08',
         title: 'Relatório de Custos & Desenvolvimento',
         description:
