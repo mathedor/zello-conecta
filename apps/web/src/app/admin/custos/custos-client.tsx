@@ -26,7 +26,18 @@ import {
   monthsUntil,
   type MonthlyItem,
 } from '@/lib/custos-data';
-import { sumValue, type DevGroup, type OrderGroup } from '@/lib/custos-montagem';
+import {
+  brlSigned,
+  saldoNotes,
+  saldoRows,
+  sumValue,
+  withSaldoGroups,
+  type DevGroup,
+  type OrderGroup,
+  type SaldoRow,
+} from '@/lib/custos-montagem';
+import type { SaldoAna } from '@/lib/custosAna';
+import { useSaldosDaAna } from './PagamentosAna';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -153,6 +164,60 @@ function TierChip({ tier }: { tier: keyof typeof TIERS }) {
   );
 }
 
+/** saldo de um mês pago que mudou depois: valor com sinal, pago só leitura (é a Ana que baixa) */
+function SaldoLine({ row }: { row: SaldoRow }) {
+  return (
+    <li className="flex items-start gap-3 border-b border-border/60 px-5 py-3 last:border-0">
+      <span
+        title="Saldo lançado pela Ana — a baixa vem junto com a do mês"
+        className={cn(
+          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border',
+          row.paid ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border bg-secondary text-transparent',
+        )}
+      >
+        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">{row.title}</span>
+            <span
+              className={cn(
+                'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                row.value < 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+              )}
+            >
+              {row.value < 0 ? 'crédito' : 'saldo'}
+            </span>
+          </span>
+          <span
+            className={cn('shrink-0 text-sm font-semibold tabular-nums', row.value < 0 && 'text-emerald-600')}
+          >
+            {brlSigned(row.value)}
+          </span>
+        </div>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {row.description} · {row.paid ? 'pago' : 'em aberto'}
+        </p>
+      </div>
+    </li>
+  );
+}
+
+/** nota discreta no mês de origem: a diferença saiu daqui e foi pro mês seguinte */
+function SaldoNotes({ notes }: { notes: string[] }) {
+  if (notes.length === 0) return null;
+  return (
+    <div className="border-t border-border px-5 py-2">
+      {notes.map((n) => (
+        <p key={n} className="text-xs text-muted-foreground">
+          {n}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 /** selo discreto das entregas que vieram da Ana */
 function AnaChip() {
   return (
@@ -211,18 +276,28 @@ function Section({
 
 /* `items` chega do servidor já com o preço que a Ana leu na fatura deste mês.
    `devGroups` é o desenvolvimento do arquivo + as tarefas da Ana, mês a mês, e
-   `orders` são os pedidos que a Ana entregou (fatura própria, fora do mês). */
+   `orders` são os pedidos que a Ana entregou (fatura própria, fora do mês).
+   `saldos` é o que mudou num mês já pago e caiu no mês seguinte em aberto —
+   chega do servidor e se atualiza quando a baixa é dada no quadro de cima. */
 export function CustosClient({
   currentMonth,
   items,
-  devGroups,
+  devGroups: serverGroups,
   orders,
+  saldos: serverSaldos,
 }: {
   currentMonth: string;
   items: MonthlyItem[];
   devGroups: DevGroup[];
   orders: OrderGroup[];
+  saldos: SaldoAna[];
 }) {
+  const saldos = useSaldosDaAna(serverSaldos);
+  // mês que só tem saldo (sem entrega) ganha o grupo dele, se já começou
+  const devGroups = useMemo(
+    () => withSaldoGroups(serverGroups, saldos, currentMonth),
+    [serverGroups, saldos, currentMonth],
+  );
   const [state, setState] = useState<CustosState>(EMPTY);
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -287,11 +362,13 @@ export function CustosClient({
   );
 
   const monthlyNow = useMemo(
-    () => monthRows(currentMonth).reduce((s, r) => s + r.value, 0),
-    [monthRows, currentMonth],
+    () => sumValue([...monthRows(currentMonth), ...saldoRows(saldos, 'custos', currentMonth)]),
+    [monthRows, currentMonth, saldos],
   );
 
-  /* desenvolvimento = arquivo + tarefas da Ana (já com tier e margem da casa) */
+  /* desenvolvimento = arquivo + tarefas da Ana (já com tier e margem da casa).
+     O total do mês soma o saldo que caiu nele; o total investido, não — a
+     entrega que gerou o saldo já está no mês de origem (contaria duas vezes). */
   const devTotal = useMemo(
     () => ({
       value: sumValue(devGroups.flatMap((g) => g.rows)),
@@ -306,9 +383,10 @@ export function CustosClient({
   const totalInvested = SETUP.value + devTotal.value;
 
   const currentDevMonth = devGroups.find((m) => m.ym === currentMonth);
-  const currentDevTotal = currentDevMonth ? sumValue(currentDevMonth.rows) : 0;
+  const currentSaldos = saldoRows(saldos, 'dev', currentMonth);
+  const currentDevTotal = currentDevMonth ? sumValue([...currentDevMonth.rows, ...currentSaldos]) : 0;
   const currentDevPaid = currentDevMonth
-    ? sumValue(currentDevMonth.rows.filter((r) => state.paidDev[r.pk]))
+    ? sumValue([...currentDevMonth.rows.filter((r) => state.paidDev[r.pk]), ...currentSaldos.filter((r) => r.paid)])
     : 0;
   const currentDevPct = currentDevTotal ? (currentDevPaid / currentDevTotal) * 100 : 100;
 
@@ -399,13 +477,16 @@ export function CustosClient({
 
           {months.map((ym, idx) => {
             const rows = monthRows(ym);
-            const total = rows.reduce((s, r) => s + r.value, 0);
-            const paidValue = rows.reduce(
-              (s, r) => s + (state.paidMonthly[`${ym}:${r.id}`] ? r.value : 0),
-              0,
-            );
-            const pct = total ? (paidValue / total) * 100 : 0;
-            const allPaid = pct >= 99.99;
+            const saldosM = saldoRows(saldos, 'custos', ym);
+            const notes = saldoNotes(saldos, 'custos', ym);
+            const total = sumValue([...rows, ...saldosM]);
+            const paidValue = sumValue([
+              ...rows.filter((r) => state.paidMonthly[`${ym}:${r.id}`]),
+              ...saldosM.filter((r) => r.paid),
+            ]);
+            const pct = total ? Math.min(100, (paidValue / total) * 100) : 0;
+            // o botão mexe só nas contas; o saldo é baixado pela Ana, junto com o mês
+            const allPaid = rows.length > 0 && rows.every((r) => state.paidMonthly[`${ym}:${r.id}`]);
             return (
               <Section
                 key={ym}
@@ -419,7 +500,7 @@ export function CustosClient({
                 }
               >
                 <div className="px-5 pt-4">
-                  <ProgressBar pct={pct} tone={allPaid ? 'emerald' : 'zello'} />
+                  <ProgressBar pct={pct} tone={pct >= 99.99 ? 'emerald' : 'zello'} />
                 </div>
                 <ul className="mt-1">
                   {rows.map((r) => {
@@ -516,6 +597,9 @@ export function CustosClient({
                       </li>
                     );
                   })}
+                  {saldosM.map((r) => (
+                    <SaldoLine key={r.ref} row={r} />
+                  ))}
                 </ul>
                 <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
                   <span className="text-sm font-semibold">
@@ -537,6 +621,7 @@ export function CustosClient({
                     )}
                   </Button>
                 </div>
+                <SaldoNotes notes={notes} />
               </Section>
             );
           })}
@@ -584,19 +669,25 @@ export function CustosClient({
           >
             <div className="divide-y divide-border">
               {devGroups.map((m) => {
+                const saldosM = saldoRows(saldos, 'dev', m.ym);
+                const notes = saldoNotes(saldos, 'dev', m.ym);
                 const t = {
-                  value: sumValue(m.rows),
+                  value: sumValue([...m.rows, ...saldosM]),
                   tokens: m.rows.reduce((s, r) => s + r.tokens, 0),
                 };
-                const paidValue = sumValue(m.rows.filter((r) => state.paidDev[r.pk]));
-                const pct = t.value ? (paidValue / t.value) * 100 : 0;
-                const allPaid = pct >= 99.99;
+                const paidValue = sumValue([
+                  ...m.rows.filter((r) => state.paidDev[r.pk]),
+                  ...saldosM.filter((r) => r.paid),
+                ]);
+                const pct = t.value ? Math.min(100, (paidValue / t.value) * 100) : 0;
+                // o botão mexe só nas entregas; o saldo é baixado pela Ana, junto com o mês
+                const allPaid = m.rows.length > 0 && m.rows.every((r) => state.paidDev[r.pk]);
                 return (
                   <div key={m.key}>
                     <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary/40 px-5 py-2.5">
                       <div>
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {m.generated ? 'Entregas pela Ana' : m.key}
+                          {m.rows.length === 0 ? 'Saldo do mês' : m.generated ? 'Entregas pela Ana' : m.key}
                         </span>
                         <span className="ml-2 text-sm font-medium">{m.label}</span>
                       </div>
@@ -610,7 +701,7 @@ export function CustosClient({
                       </div>
                     </div>
                     <div className="px-5 pt-2">
-                      <ProgressBar pct={pct} tone={allPaid ? 'emerald' : 'zello'} />
+                      <ProgressBar pct={pct} tone={pct >= 99.99 ? 'emerald' : 'zello'} />
                     </div>
                     <ul className="mt-1">
                       {m.rows.map((e) => {
@@ -659,27 +750,33 @@ export function CustosClient({
                           </li>
                         );
                       })}
+                      {saldosM.map((r) => (
+                        <SaldoLine key={r.ref} row={r} />
+                      ))}
                     </ul>
                     <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-2">
                       <span className="text-xs text-muted-foreground">
                         {Math.round(pct)}% pago
                       </span>
-                      <Button
-                        size="sm"
-                        variant={allPaid ? 'ghost' : 'outline'}
-                        onClick={() => markDevMonthPaid(m.rows.map((r) => r.pk), !allPaid)}
-                      >
-                        {allPaid ? (
-                          <>
-                            <X className="h-4 w-4" /> Desmarcar mês
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-4 w-4" /> Marcar mês como pago
-                          </>
-                        )}
-                      </Button>
+                      {m.rows.length > 0 ? (
+                        <Button
+                          size="sm"
+                          variant={allPaid ? 'ghost' : 'outline'}
+                          onClick={() => markDevMonthPaid(m.rows.map((r) => r.pk), !allPaid)}
+                        >
+                          {allPaid ? (
+                            <>
+                              <X className="h-4 w-4" /> Desmarcar mês
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" /> Marcar mês como pago
+                            </>
+                          )}
+                        </Button>
+                      ) : null}
                     </div>
+                    <SaldoNotes notes={notes} />
                   </div>
                 );
               })}

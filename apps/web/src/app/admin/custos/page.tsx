@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { contasDaAna, comValorDaAna, entregasDaAna, pagamentosDaAna } from '@/lib/custosAna';
 import { buildDev } from '@/lib/custos-montagem';
-import PagamentosAna from './PagamentosAna';
+import PagamentosAna, { SaldosDaAna } from './PagamentosAna';
 import { marcarPagamentoNaAna } from './acoes-ana';
 import { MONTHLY_ITEMS } from '@/lib/custos-data';
 import { CustosClient } from './custos-client';
@@ -43,8 +43,18 @@ export default async function CustosPage() {
       title="Custos & Desenvolvimento"
       description="Quanto a Zello Conecta custou para existir, quanto custa por mês para ficar no ar e tudo que foi entregue desde a primeira versão."
     >
-      <PagamentosAna inicial={pagamentosNaAna} marcar={marcarPagamentoNaAna} />
-      <CustosClient currentMonth={currentMonth} items={items} devGroups={groups} orders={orders} />
+      {/* os saldos (mês pago que mudou depois) valem pros dois quadros: a baixa
+          dada no quadro de pagamentos redesenha a linha de saldo no relatório */}
+      <SaldosDaAna inicial={pagamentosNaAna.saldos}>
+        <PagamentosAna inicial={pagamentosNaAna} marcar={marcarPagamentoNaAna} />
+        <CustosClient
+          currentMonth={currentMonth}
+          items={items}
+          devGroups={groups}
+          orders={orders}
+          saldos={pagamentosNaAna.saldos}
+        />
+      </SaldosDaAna>
     </DashboardShell>
   );
 }

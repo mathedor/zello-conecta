@@ -105,9 +105,41 @@ export function comValorDaAna<T extends ContaLocal>(locais: T[], daAna: ContaAna
    o ✓ aqui. Um número só, nos dois lados. */
 
 export type EstadoMes = { pago: boolean; pago_em: string | null; centavos: number; vencimento: string };
-export type PagamentosAna = { custos: Record<string, EstadoMes>; dev: Record<string, EstadoMes> };
 
-const SEM_ANA: PagamentosAna = { custos: {}, dev: {} };
+/* ══ MÊS PAGO QUE MUDOU DEPOIS VIRA SALDO NO PRÓXIMO MÊS ══
+   A Ana congela o mês depois de pago. Se ele muda depois (entrega escrita no
+   relatório depois da baixa, infra que fecha noutro preço), a diferença vira
+   saldo no próximo mês em aberto — com sinal: positivo = a pagar a mais,
+   negativo = crédito. A página mostra sempre: linha no mês de destino, nota
+   no mês de origem. O pago do saldo é dela (baixa junto com o mês). */
+export type SaldoAna = {
+  ref: string;
+  tipo: "dev" | "custos";
+  origem: string;    // AAAA-MM do mês pago que mudou
+  destino: string;   // AAAA-MM onde a diferença é cobrada (ou creditada)
+  centavos: number;  // COM SINAL
+  pago: boolean;
+};
+
+export type PagamentosAna = { custos: Record<string, EstadoMes>; dev: Record<string, EstadoMes>; saldos: SaldoAna[] };
+
+const SEM_ANA: PagamentosAna = { custos: {}, dev: {}, saldos: [] };
+
+/** só o que tem cara de saldo passa — Ana antiga (sem o campo) = lista vazia */
+function saldosDe(bruto: unknown): SaldoAna[] {
+  if (!Array.isArray(bruto)) return [];
+  return bruto
+    .filter((s) => s && (s.tipo === "dev" || s.tipo === "custos") && /^\d{4}-\d{2}$/.test(String(s.origem)) && /^\d{4}-\d{2}$/.test(String(s.destino)))
+    .map((s) => ({
+      ref: String(s.ref ?? `${s.tipo}:${s.origem}`),
+      tipo: s.tipo,
+      origem: String(s.origem),
+      destino: String(s.destino),
+      centavos: Math.round(Number(s.centavos) || 0),
+      pago: Boolean(s.pago),
+    }))
+    .filter((s) => s.centavos !== 0);
+}
 
 export async function pagamentosDaAna(projeto: string): Promise<PagamentosAna> {
   const token = process.env.ANA_CUSTOS_TOKEN;
@@ -119,7 +151,7 @@ export async function pagamentosDaAna(projeto: string): Promise<PagamentosAna> {
     });
     if (!r.ok) return SEM_ANA;
     const d = await r.json();
-    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {} } : SEM_ANA;
+    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {}, saldos: saldosDe(d.saldos) } : SEM_ANA;
   } catch {
     return SEM_ANA;   // Ana fora do ar não pode derrubar o relatório
   }
@@ -141,7 +173,7 @@ export async function marcarNaAna(
     });
     if (!r.ok) return null;
     const d = await r.json();
-    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {} } : null;
+    return d?.ok ? { custos: d.custos ?? {}, dev: d.dev ?? {}, saldos: saldosDe(d.saldos) } : null;
   } catch {
     return null;
   }

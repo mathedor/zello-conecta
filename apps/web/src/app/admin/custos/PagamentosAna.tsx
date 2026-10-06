@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { PagamentosAna as Estado } from '@/lib/custosAna';
+import { createContext, useContext, useState, useTransition } from "react";
+import type { PagamentosAna as Estado, SaldoAna } from '@/lib/custosAna';
 
 /* ══ O QUE JÁ FOI PAGO — E O QUE FALTA ══
    Este quadro não guarda nada aqui dentro: ele mostra as contas deste sistema
@@ -10,6 +10,22 @@ import type { PagamentosAna as Estado } from '@/lib/custosAna';
    que abre esta página, e ninguém cobra o que já foi pago. */
 
 type Marcar = (tipo: "custos" | "dev", mes: string, pago: boolean) => Promise<Estado | null>;
+
+/* ── os saldos são um só pra página inteira ──
+   Marcar o mês aqui baixa junto, lá na Ana, o saldo lançado pra ele — e a
+   resposta já volta com os saldos novos. Este contexto leva essa resposta
+   até o relatório lá embaixo, pra linha de saldo do mês acender sem recarregar. */
+const SaldosCtx = createContext<{ saldos: SaldoAna[]; trocar: (s: SaldoAna[]) => void } | null>(null);
+
+export function SaldosDaAna({ inicial, children }: { inicial: SaldoAna[]; children: React.ReactNode }) {
+  const [saldos, trocar] = useState<SaldoAna[]>(inicial);
+  return <SaldosCtx.Provider value={{ saldos, trocar }}>{children}</SaldosCtx.Provider>;
+}
+
+/** os saldos como estão agora (os que vieram do servidor, se não houver o contexto) */
+export function useSaldosDaAna(reserva: SaldoAna[] = []): SaldoAna[] {
+  return useContext(SaldosCtx)?.saldos ?? reserva;
+}
 
 const real = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -23,22 +39,44 @@ export default function PagamentosAna({ inicial, marcar }: { inicial: Estado; ma
   const [estado, setEstado] = useState<Estado>(inicial);
   const [mexendo, setMexendo] = useState<string | null>(null);
   const [, comecar] = useTransition();
+  const ctx = useContext(SaldosCtx);
+  const saldos = estado.saldos ?? [];
 
-  const meses = Array.from(new Set([...Object.keys(estado.custos), ...Object.keys(estado.dev)])).sort().reverse();
+  // o mês de destino de um saldo aparece mesmo antes de ter a conta dele
+  const meses = Array.from(
+    new Set([...Object.keys(estado.custos), ...Object.keys(estado.dev), ...saldos.map((s) => s.destino)]),
+  ).sort().reverse();
   if (meses.length === 0) return null;
 
   const clicar = (tipo: "custos" | "dev", mes: string, pago: boolean) => {
     setMexendo(`${tipo}:${mes}`);
     comecar(async () => {
       const novo = await marcar(tipo, mes, !pago);
-      if (novo) setEstado(novo);
+      if (novo) {
+        setEstado(novo);
+        ctx?.trocar(novo.saldos ?? []);
+      }
       setMexendo(null);
     });
   };
 
+  /* saldo que cai neste mês: some junto com a baixa do mês (é a Ana que dá) */
+  const saldosDaCelula = (tipo: "custos" | "dev", mes: string) =>
+    saldos
+      .filter((s) => s.tipo === tipo && s.destino === mes)
+      .map((s) => (
+        <span key={s.ref} style={{ display: "block", fontSize: ".74rem", marginTop: 4, opacity: 0.85 }}>
+          <span style={{ color: s.centavos < 0 ? "#3ecf8e" : "inherit", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+            {s.centavos < 0 ? "−" : "+"}{real(Math.abs(s.centavos))}
+          </span>{" "}
+          {s.centavos < 0 ? "crédito" : "saldo"} de {mesBonito(s.origem)} · {s.pago ? "✓ pago" : "em aberto"}
+        </span>
+      ));
+
   const celula = (tipo: "custos" | "dev", mes: string) => {
     const e = estado[tipo][mes];
-    if (!e) return <span style={{ opacity: 0.4 }}>—</span>;
+    const extras = saldosDaCelula(tipo, mes);
+    if (!e) return extras.length ? <>{extras}</> : <span style={{ opacity: 0.4 }}>—</span>;
     const ocupado = mexendo === `${tipo}:${mes}`;
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -56,6 +94,7 @@ export default function PagamentosAna({ inicial, marcar }: { inicial: Estado; ma
         >
           {ocupado ? "…" : e.pago ? "✓ pago" : `em aberto · vence ${dia(e.vencimento)}`}
         </button>
+        {extras.length > 0 && <span style={{ flexBasis: "100%" }}>{extras}</span>}
       </span>
     );
   };
