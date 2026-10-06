@@ -37,7 +37,7 @@ import {
   type SaldoRow,
 } from '@/lib/custos-montagem';
 import type { SaldoAna } from '@/lib/custosAna';
-import { useSaldosDaAna } from './PagamentosAna';
+import { useBaixaNaAna, useSaldosDaAna, type MesMarcavel } from './PagamentosAna';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -421,12 +421,57 @@ export function CustosClient({
       return { ...p, paidDev: next };
     });
 
+  /* o MÊS pago é o da Ana: abre com o estado dela e cada mês que fecha ou
+     reabre aqui vira baixa lá (PagamentosAna.tsx › useBaixaNaAna). Os dois
+     mapas de ✓ do navegador viram um só, com prefixo, pra conversar com ela. */
+  const allChecks = useMemo(() => {
+    const out: Record<string, boolean> = {};
+    for (const [k, v] of Object.entries(state.paidMonthly)) out[`m|${k}`] = v;
+    for (const [k, v] of Object.entries(state.paidDev)) out[`d|${k}`] = v;
+    return out;
+  }, [state.paidMonthly, state.paidDev]);
+  const markChecks = (keys: string[], paid: boolean) =>
+    update((p) => {
+      const paidMonthly = { ...p.paidMonthly };
+      const paidDev = { ...p.paidDev };
+      keys.forEach((k) => {
+        if (k.startsWith('m|')) paidMonthly[k.slice(2)] = paid;
+        else if (k.startsWith('d|')) paidDev[k.slice(2)] = paid;
+      });
+      return { ...p, paidMonthly, paidDev };
+    });
+  const markable: MesMarcavel[] = [
+    ...months.map((ym) => ({ tipo: 'custos' as const, mes: ym, chaves: monthRows(ym).map((r) => `m|${ym}:${r.id}`) })),
+    ...devGroups.map((g) => ({ tipo: 'dev' as const, mes: g.ym, chaves: g.rows.map((r) => `d|${r.pk}`) })),
+  ];
+  const baixa = useBaixaNaAna({
+    chave: STORAGE_KEY,
+    pronto: ready,
+    meses: markable,
+    pagos: allChecks,
+    marcarChaves: markChecks,
+  });
+
   if (!ready) {
     return <div className="h-64 animate-pulse rounded-2xl border border-border bg-card" />;
   }
 
   return (
     <div className="space-y-6">
+      {/* o ✓ do mês é o da Ana: mostra quando avisou — e quando não deu */}
+      {baixa.ligado ? (
+        <p
+          role={baixa.sinc === 'erro' ? 'alert' : undefined}
+          className={cn('text-xs', baixa.sinc === 'erro' ? 'font-semibold text-destructive' : 'text-muted-foreground')}
+        >
+          {baixa.sinc === 'erro'
+            ? 'Não consegui avisar o controle da Diretório Web — a última marcação valeu só neste navegador. Tente de novo em instantes.'
+            : `Mês fechado (ou reaberto) aqui dá baixa direto no controle da Diretório Web${
+                baixa.sinc === 'indo' ? ' — avisando…' : baixa.sinc === 'ok' ? ' — avisado' : ''
+              }. Marcações parciais e ajustes de valor ficam neste navegador.`}
+        </p>
+      ) : null}
+
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card p-5">
@@ -680,8 +725,13 @@ export function CustosClient({
                   ...saldosM.filter((r) => r.paid),
                 ]);
                 const pct = t.value ? Math.min(100, (paidValue / t.value) * 100) : 0;
-                // o botão mexe só nas entregas; o saldo é baixado pela Ana, junto com o mês
-                const allPaid = m.rows.length > 0 && m.rows.every((r) => state.paidDev[r.pk]);
+                // o botão mexe só nas entregas; o saldo é baixado pela Ana, junto com o mês.
+                // Mês só com saldo (nenhuma entrega): o estado do mês é o do próprio
+                // saldo — senão pareceria quitado vazio — e o botão dá a baixa na Ana
+                const onlySaldo = m.rows.length === 0 && saldosM.length > 0;
+                const allPaid = onlySaldo
+                  ? saldosM.every((r) => r.paid)
+                  : m.rows.length > 0 && m.rows.every((r) => state.paidDev[r.pk]);
                 return (
                   <div key={m.key}>
                     <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary/40 px-5 py-2.5">
@@ -758,11 +808,16 @@ export function CustosClient({
                       <span className="text-xs text-muted-foreground">
                         {Math.round(pct)}% pago
                       </span>
-                      {m.rows.length > 0 ? (
+                      {m.rows.length > 0 || (onlySaldo && baixa.ligado) ? (
                         <Button
                           size="sm"
                           variant={allPaid ? 'ghost' : 'outline'}
-                          onClick={() => markDevMonthPaid(m.rows.map((r) => r.pk), !allPaid)}
+                          disabled={onlySaldo && baixa.sinc === 'indo'}
+                          onClick={() =>
+                            onlySaldo
+                              ? baixa.avisarMes('dev', m.ym, !allPaid)
+                              : markDevMonthPaid(m.rows.map((r) => r.pk), !allPaid)
+                          }
                         >
                           {allPaid ? (
                             <>
