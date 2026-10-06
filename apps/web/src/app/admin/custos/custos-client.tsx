@@ -17,19 +17,16 @@ import {
 import { toast } from 'sonner';
 import {
   API_ITEMS,
-  DEV_MONTHS,
-  DEV_TOTAL,
   SETUP,
   STORAGE_KEY,
   TIERS,
   USD_RATE,
-  devMonthTotal,
   formatTokens,
   monthLabel,
   monthsUntil,
-  tierPrice,
   type MonthlyItem,
 } from '@/lib/custos-data';
+import { sumValue, type DevGroup, type OrderGroup } from '@/lib/custos-montagem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,7 +52,7 @@ interface ExtraCost {
 interface CustosState {
   /** chave `${ym}:${itemId}` */
   paidMonthly: Record<string, boolean>;
-  /** chave `${devMonthKey}:${index}` */
+  /** chave `${devMonthKey}:${index}` (tarefa da Ana: `${devMonthKey}:ana:${ref}`) */
   paidDev: Record<string, boolean>;
   paidSetup: boolean;
   /** override de valor das contas fixas, por id */
@@ -156,6 +153,18 @@ function TierChip({ tier }: { tier: keyof typeof TIERS }) {
   );
 }
 
+/** selo discreto das entregas que vieram da Ana */
+function AnaChip() {
+  return (
+    <span
+      title="Entregue pela Ana direto no sistema"
+      className="rounded-full bg-zello-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zello-700"
+    >
+      Ana
+    </span>
+  );
+}
+
 function Section({
   icon: Icon,
   title,
@@ -200,8 +209,20 @@ function Section({
  * Página
  * ------------------------------------------------------------------ */
 
-/* `items` chega do servidor já com o preço que a Ana leu na fatura deste mês. */
-export function CustosClient({ currentMonth, items }: { currentMonth: string; items: MonthlyItem[] }) {
+/* `items` chega do servidor já com o preço que a Ana leu na fatura deste mês.
+   `devGroups` é o desenvolvimento do arquivo + as tarefas da Ana, mês a mês, e
+   `orders` são os pedidos que a Ana entregou (fatura própria, fora do mês). */
+export function CustosClient({
+  currentMonth,
+  items,
+  devGroups,
+  orders,
+}: {
+  currentMonth: string;
+  items: MonthlyItem[];
+  devGroups: DevGroup[];
+  orders: OrderGroup[];
+}) {
   const [state, setState] = useState<CustosState>(EMPTY);
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -270,15 +291,24 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
     [monthRows, currentMonth],
   );
 
-  const totalInvested = SETUP.value + DEV_TOTAL.value;
+  /* desenvolvimento = arquivo + tarefas da Ana (já com tier e margem da casa) */
+  const devTotal = useMemo(
+    () => ({
+      value: sumValue(devGroups.flatMap((g) => g.rows)),
+      tokens: devGroups.reduce((s, g) => s + g.rows.reduce((t, r) => t + r.tokens, 0), 0),
+      count: devGroups.reduce((s, g) => s + g.rows.length, 0),
+    }),
+    [devGroups],
+  );
+  const ordersTotal = sumValue(orders.flatMap((o) => o.rows));
+  const ordersCount = orders.reduce((s, o) => s + o.rows.length, 0);
 
-  const currentDevMonth = DEV_MONTHS.find((m) => m.ym === currentMonth);
-  const currentDevTotal = currentDevMonth ? devMonthTotal(currentDevMonth).value : 0;
+  const totalInvested = SETUP.value + devTotal.value;
+
+  const currentDevMonth = devGroups.find((m) => m.ym === currentMonth);
+  const currentDevTotal = currentDevMonth ? sumValue(currentDevMonth.rows) : 0;
   const currentDevPaid = currentDevMonth
-    ? currentDevMonth.entries.reduce(
-        (s, e, i) => s + (state.paidDev[`${currentDevMonth.key}:${i}`] ? tierPrice(currentDevMonth.ym, e.tier) : 0),
-        0,
-      )
+    ? sumValue(currentDevMonth.rows.filter((r) => state.paidDev[r.pk]))
     : 0;
   const currentDevPct = currentDevTotal ? (currentDevPaid / currentDevTotal) * 100 : 100;
 
@@ -297,16 +327,19 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
       return { ...p, paidMonthly: next };
     });
 
-  const toggleDev = (key: string, i: number) =>
+  const toggleDev = (pk: string) =>
     update((p) => ({
       ...p,
-      paidDev: { ...p.paidDev, [`${key}:${i}`]: !p.paidDev[`${key}:${i}`] },
+      paidDev: { ...p.paidDev, [pk]: !p.paidDev[pk] },
     }));
 
-  const markDevMonthPaid = (key: string, count: number, paid: boolean) =>
+  /* "marcar mês como pago" cobre também as tarefas da Ana do mês */
+  const markDevMonthPaid = (pks: string[], paid: boolean) =>
     update((p) => {
       const next = { ...p.paidDev };
-      for (let i = 0; i < count; i += 1) next[`${key}:${i}`] = paid;
+      pks.forEach((pk) => {
+        next[pk] = paid;
+      });
       return { ...p, paidDev: next };
     });
 
@@ -324,7 +357,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
           </div>
           <p className="mt-2 text-2xl font-bold tracking-tight">{formatBRL(totalInvested)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatBRL(SETUP.value)} de setup + {formatBRL(DEV_TOTAL.value)} de evolução
+            {formatBRL(SETUP.value)} de setup + {formatBRL(devTotal.value)} de evolução
           </p>
         </div>
 
@@ -544,18 +577,18 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
             defaultOpen
             meta={
               <>
-                {formatBRL(DEV_TOTAL.value)} · {DEV_TOTAL.count} entregas ·{' '}
-                {formatTokens(DEV_TOTAL.tokens)}
+                {formatBRL(devTotal.value)} · {devTotal.count} entregas ·{' '}
+                {formatTokens(devTotal.tokens)}
               </>
             }
           >
             <div className="divide-y divide-border">
-              {DEV_MONTHS.map((m) => {
-                const t = devMonthTotal(m);
-                const paidValue = m.entries.reduce(
-                  (s, e, i) => s + (state.paidDev[`${m.key}:${i}`] ? tierPrice(m.ym, e.tier) : 0),
-                  0,
-                );
+              {devGroups.map((m) => {
+                const t = {
+                  value: sumValue(m.rows),
+                  tokens: m.rows.reduce((s, r) => s + r.tokens, 0),
+                };
+                const paidValue = sumValue(m.rows.filter((r) => state.paidDev[r.pk]));
                 const pct = t.value ? (paidValue / t.value) * 100 : 0;
                 const allPaid = pct >= 99.99;
                 return (
@@ -563,7 +596,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                     <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary/40 px-5 py-2.5">
                       <div>
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {m.key}
+                          {m.generated ? 'Entregas pela Ana' : m.key}
                         </span>
                         <span className="ml-2 text-sm font-medium">{m.label}</span>
                       </div>
@@ -580,16 +613,16 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                       <ProgressBar pct={pct} tone={allPaid ? 'emerald' : 'zello'} />
                     </div>
                     <ul className="mt-1">
-                      {m.entries.map((e, i) => {
-                        const paid = !!state.paidDev[`${m.key}:${i}`];
+                      {m.rows.map((e) => {
+                        const paid = !!state.paidDev[e.pk];
                         return (
                           <li
-                            key={`${m.key}-${i}`}
+                            key={e.pk}
                             className="flex items-start gap-3 border-b border-border/60 px-5 py-3 last:border-0"
                           >
                             <PaidToggle
                               paid={paid}
-                              onClick={() => toggleDev(m.key, i)}
+                              onClick={() => toggleDev(e.pk)}
                               label={`Marcar ${e.title} como pago`}
                             />
                             <div className="min-w-0 flex-1">
@@ -608,13 +641,14 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                                   >
                                     {e.title}
                                   </span>
+                                  {e.ana ? <AnaChip /> : null}
                                 </span>
                                 <span className="shrink-0 text-right">
                                   <span className="block text-sm font-semibold tabular-nums">
-                                    {formatBRL(tierPrice(m.ym, e.tier))}
+                                    {formatBRL(e.value)}
                                   </span>
                                   <span className="block text-[11px] text-muted-foreground">
-                                    {formatTokens(TIERS[e.tier].tokens)}
+                                    {formatTokens(e.tokens)}
                                   </span>
                                 </span>
                               </div>
@@ -633,7 +667,7 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                       <Button
                         size="sm"
                         variant={allPaid ? 'ghost' : 'outline'}
-                        onClick={() => markDevMonthPaid(m.key, m.entries.length, !allPaid)}
+                        onClick={() => markDevMonthPaid(m.rows.map((r) => r.pk), !allPaid)}
                       >
                         {allPaid ? (
                           <>
@@ -650,7 +684,96 @@ export function CustosClient({ currentMonth, items }: { currentMonth: string; it
                 );
               })}
             </div>
+            {devGroups.some((g) => g.rows.some((r) => r.ana)) ? (
+              <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
+                As marcadas <AnaChip /> são tarefas que a Ana entregou direto no sistema: entram no mês
+                delas, pelo mesmo tamanho de trabalho, e pagam junto com o mês.
+              </p>
+            ) : null}
           </Section>
+
+          {/* Pedidos pela Ana — fatura própria, de quem pediu: fora do mês */}
+          {ordersCount > 0 ? (
+            <Section
+              icon={Wrench}
+              title="Pedidos pela Ana"
+              defaultOpen
+              meta={
+                <>
+                  {formatBRL(ordersTotal)} · {ordersCount}{' '}
+                  {ordersCount === 1 ? 'pedido entregue' : 'pedidos entregues'} · faturados a quem pediu
+                </>
+              }
+            >
+              <div className="divide-y divide-border">
+                {orders.map((o) => (
+                  <div key={o.ym}>
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary/40 px-5 py-2.5">
+                      <span className="text-sm font-medium">Pedidos pela Ana — {o.label}</span>
+                      <span className="text-sm font-semibold tabular-nums">{formatBRL(sumValue(o.rows))}</span>
+                    </div>
+                    <ul>
+                      {o.rows.map((r) => (
+                        <li
+                          key={r.ref}
+                          className="flex items-start gap-3 border-b border-border/60 px-5 py-3 last:border-0"
+                        >
+                          <span
+                            title="Fatura do pedido — a baixa vem sozinha quando ela é paga"
+                            className={cn(
+                              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border',
+                              r.paid
+                                ? 'border-emerald-500 bg-emerald-500 text-white'
+                                : 'border-border bg-secondary text-transparent',
+                            )}
+                          >
+                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                              <span className="flex min-w-0 flex-wrap items-center gap-2">
+                                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                                  {r.date}
+                                </span>
+                                <span className="text-sm font-medium">{r.title}</span>
+                                <AnaChip />
+                              </span>
+                              <span className="shrink-0 text-right">
+                                <span className="block text-sm font-semibold tabular-nums">
+                                  {formatBRL(r.value)}
+                                </span>
+                                <span
+                                  className={cn(
+                                    'mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                                    r.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+                                  )}
+                                >
+                                  {r.paid ? 'fatura paga' : 'fatura aberta'}
+                                </span>
+                              </span>
+                            </div>
+                            {r.description ? (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{r.description}</p>
+                            ) : null}
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              pedido #{r.num}
+                              {r.who ? ` de ${r.who}` : ''}
+                              {r.tokens > 0 ? ` · ${formatTokens(r.tokens)}` : ''}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
+                Pedidos de clientes e sócios que a Ana executou no sistema. Cada um tem fatura própria,
+                cobrada de quem pediu — por isso não entram no desenvolvimento do mês nem no total
+                investido. A baixa vem sozinha quando a fatura é paga.
+              </p>
+            </Section>
+          ) : null}
 
           {/* APIs & serviços */}
           <Section

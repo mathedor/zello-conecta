@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
-import { contasDaAna, comValorDaAna, pagamentosDaAna } from '@/lib/custosAna';
+import { contasDaAna, comValorDaAna, entregasDaAna, pagamentosDaAna } from '@/lib/custosAna';
+import { buildDev } from '@/lib/custos-montagem';
 import PagamentosAna from './PagamentosAna';
 import { marcarPagamentoNaAna } from './acoes-ana';
 import { MONTHLY_ITEMS } from '@/lib/custos-data';
@@ -14,7 +15,13 @@ export default async function CustosPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== 'ADMIN') redirect('/painel');
 
-  const pagamentosNaAna = await pagamentosDaAna('zello');
+  const [pagamentosNaAna, daAna, entregas] = await Promise.all([
+    pagamentosDaAna('zello'),
+    // o preço de verdade da infraestrutura deste mês, lido pela Ana na fatura
+    contasDaAna('zello'),
+    // o que a Ana entregou aqui (tarefas entram no mês, pedidos ficam à parte)
+    entregasDaAna('zello'),
+  ]);
 
   // Mês corrente calculado no servidor (fuso de Brasília) para não haver
   // divergência entre o HTML gerado e o que o navegador renderiza.
@@ -23,12 +30,13 @@ export default async function CustosPage() {
   );
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  // o preço de verdade da infraestrutura deste mês, lido pela Ana na fatura
-  const daAna = await contasDaAna('zello');
   const items = comValorDaAna(
     MONTHLY_ITEMS.map((i) => ({ ...i, nome: i.label, valor: i.value, obs: i.note, estimado: i.estimated })),
     daAna,
   ).map((i) => ({ ...i, value: i.valor, note: i.obs ?? i.note, estimated: i.estimado }));
+
+  // desenvolvimento do arquivo + tarefas da Ana; pedidos à parte (fatura própria)
+  const { groups, orders } = buildDev(entregas);
 
   return (
     <DashboardShell
@@ -36,7 +44,7 @@ export default async function CustosPage() {
       description="Quanto a Zello Conecta custou para existir, quanto custa por mês para ficar no ar e tudo que foi entregue desde a primeira versão."
     >
       <PagamentosAna inicial={pagamentosNaAna} marcar={marcarPagamentoNaAna} />
-      <CustosClient currentMonth={currentMonth} items={items} />
+      <CustosClient currentMonth={currentMonth} items={items} devGroups={groups} orders={orders} />
     </DashboardShell>
   );
 }

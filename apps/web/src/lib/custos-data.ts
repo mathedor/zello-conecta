@@ -129,7 +129,9 @@ export const DEV_MARGIN = 1.2;
 export const MARGIN_SINCE = '2026-09';
 export function tierPrice(ym: string, tier: TierKey): number {
   const c = TIERS[tier].value;
-  return ym >= MARGIN_SINCE ? Math.round(c * DEV_MARGIN) : c;
+  // o valor aqui é em REAIS: arredonda no centavo (R$ 78,48), não no real —
+  // senão a página mostraria R$ 78,00 enquanto a Ana cobra R$ 78,48
+  return ym >= MARGIN_SINCE ? Math.round(c * DEV_MARGIN * 100) / 100 : c;
 }
 
 export interface DevEntry {

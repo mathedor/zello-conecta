@@ -146,3 +146,46 @@ export async function marcarNaAna(
     return null;
   }
 }
+
+/* ══ O QUE A ANA ENTREGOU NESTE SISTEMA ══
+   A Ana também mexe no código da Zello: tarefa do Terminal que virou commit
+   publicado e pedido externo de cliente/sócio. O relatório é escrito à mão e
+   nunca soube delas — então a página pergunta pra ela ao abrir.
+   · tarefa → entra no desenvolvimento do mês dela, pelo tier, e paga junto
+     com o mês (a Ana já soma isso no desenvolvimento do mês do lado de lá);
+   · pedido → tem fatura própria, cobrada de quem pediu: fica fora do mês.
+   Ana fora do ar devolve lista vazia — a página nunca cai por causa disso. */
+
+export type EntregaDaAna = {
+  ref: string;                       // "tarefa:735" | "pedido:253" — chave estável
+  tipo: "tarefa" | "pedido";
+  dia: string;                       // AAAA-MM-DD (fuso de São Paulo)
+  titulo: string;
+  descricao: string;
+  quem: string | null;               // quem pediu (só pedido)
+  tier: "P" | "M" | "G" | "X";
+  tokens_milhoes: number;
+  valor_centavos: number | null;     // pedido: valor da fatura (já com margem); tarefa: null
+  pago: boolean;
+  pago_em: string | null;
+  commit: string | null;
+};
+
+export async function entregasDaAna(projeto: string): Promise<EntregaDaAna[]> {
+  const token = process.env.ANA_CUSTOS_TOKEN;
+  if (!token) return [];
+  try {
+    const r = await fetch(`${ANA}/api/custos-entregas?projeto=${encodeURIComponent(projeto)}&t=${token}`, {
+      next: { revalidate: 300 },   // 5 min: entrega nova aparece logo, sem bater na Ana a cada clique
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    if (!d?.ok || !Array.isArray(d.entregas)) return [];
+    return (d.entregas as EntregaDaAna[]).filter(
+      (e) => e && (e.tipo === "tarefa" || e.tipo === "pedido") && /^\d{4}-\d{2}-\d{2}/.test(String(e.dia ?? "")),
+    );
+  } catch {
+    return [];   // Ana fora do ar não pode derrubar o relatório
+  }
+}
